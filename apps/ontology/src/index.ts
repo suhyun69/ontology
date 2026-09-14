@@ -5,6 +5,7 @@ import { sql } from "kysely";
 import { closeDb, db } from "./db.ts";
 import { HttpError } from "./errors.ts";
 import { openApiDocument } from "./openapi.ts";
+import { actionRoutes } from "./routes/actions.ts";
 import { metaRoutes } from "./routes/meta.ts";
 import { objectRoutes } from "./routes/objects.ts";
 
@@ -16,11 +17,17 @@ app.get("/api/objects/docs", swaggerUI({ url: "/api/objects/openapi.json" }));
 // Mounted before the instance routes: "meta" would otherwise be a candidate
 // for :type, and /api/objects/meta/types would read as type "meta", id "types".
 app.route("/api/objects/meta", metaRoutes);
+app.route("/api/objects", actionRoutes);
 app.route("/api/objects", objectRoutes);
 
 app.onError((error, c) => {
   if (error instanceof HttpError) {
-    return c.json({ error: error.message }, error.status);
+    return c.json(
+      error.details === undefined
+        ? { error: error.message }
+        : { error: error.message, details: error.details },
+      error.status,
+    );
   }
   console.error(error);
   return c.json({ error: "internal server error" }, 500);

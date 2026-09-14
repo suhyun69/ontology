@@ -1,13 +1,12 @@
 import { Hono } from "hono";
 import { sql } from "kysely";
 import type { RawBuilder } from "kysely";
-import { db } from "../db.ts";
 import type { Cardinality } from "../db.ts";
 import { HttpError } from "../errors.ts";
+import { DEFAULT_LIMIT, MAX_LIMIT, selectInstances } from "../instances.ts";
+import type { Instance } from "../instances.ts";
 import {
   columnRef,
-  findObjectType,
-  instanceTable,
   inverseCardinality,
   isPlural,
   loadInboundLinks,
@@ -16,12 +15,9 @@ import {
   objectTypeById,
   primaryKeyProperty,
   propertyById,
-  selectColumns,
+  requireObjectType,
 } from "../metadata.ts";
-import type { LinkRow, ObjectTypeRow, PropertyRow, TypeLookup } from "../metadata.ts";
-
-/** An instance row, keyed by property api_name. */
-type Instance = Record<string, unknown>;
+import type { LinkRow, PropertyRow, TypeLookup } from "../metadata.ts";
 
 type LinkView = {
   name: string;
@@ -31,57 +27,10 @@ type LinkView = {
   value: Instance | Instance[] | null;
 };
 
-const DEFAULT_LIMIT = 100;
-const MAX_LIMIT = 1000;
-
 /** Query params that control the page rather than filter the rows. */
 const PAGINATION_PARAMS = new Set(["limit", "offset"]);
 
 export const objectRoutes = new Hono();
-
-// ------------------------------------------------------------------ helpers
-
-async function requireType(apiName: string): Promise<TypeLookup> {
-  const lookup = await findObjectType(apiName);
-  if (lookup === null) {
-    throw new HttpError(404, `unknown object type: ${apiName}`);
-  }
-  return lookup;
-}
-
-/**
- * Reads instances of one type.
- *
- * Table and column names come from metadata rows and are escaped on the way in
- * (see metadata.ts); every value is a bound parameter, so nothing a caller
- * sends is ever concatenated into SQL.
- */
-async function selectInstances(
-  objectType: ObjectTypeRow,
-  properties: readonly PropertyRow[],
-  options: {
-    conditions?: readonly RawBuilder<unknown>[];
-    orderBy?: PropertyRow;
-    limit?: number;
-    offset?: number;
-  } = {},
-): Promise<Instance[]> {
-  const conditions = options.conditions ?? [];
-  const where = conditions.length > 0 ? sql.join(conditions, sql` and `) : sql`true`;
-  const orderBy = options.orderBy === undefined ? sql`1` : columnRef(options.orderBy);
-  const limit = options.limit ?? DEFAULT_LIMIT;
-  const offset = options.offset ?? 0;
-
-  const { rows } = await sql<Instance>`
-    select ${selectColumns(properties)}
-    from ${instanceTable(objectType)}
-    where ${where}
-    order by ${orderBy}
-    limit ${limit} offset ${offset}
-  `.execute(db);
-
-  return rows;
-}
 
 function parsePositiveInteger(raw: string, what: string, max: number): number {
   const value = Number(raw);
@@ -159,7 +108,7 @@ function buildFilters(
 // --------------------------------------------------- GET /api/objects/:type
 
 objectRoutes.get("/:type", async (c) => {
-  const { metaSchema, objectType } = await requireType(c.req.param("type"));
+  const { metaSchema, objectType } = await requireObjectType(c.req.param("type"));
   const properties = await loadProperties(metaSchema, objectType.id);
 
   const query = c.req.query();
@@ -258,7 +207,7 @@ async function resolveInbound(
 }
 
 objectRoutes.get("/:type/:id", async (c) => {
-  const lookup = await requireType(c.req.param("type"));
+  const lookup = await requireObjectType(c.req.param("type"));
   const { metaSchema, objectType } = lookup;
   const id = c.req.param("id");
 
