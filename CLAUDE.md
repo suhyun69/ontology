@@ -3,3 +3,6 @@
 - Use `pnpm add` to install libraries. Don't add packages by writing them directly into a `package.json`
 - The Neon Postgres connection string lives in `DATABASE_URL` in `.env` at the repository root.
 - We use Node 24+, which can natively run `.ts` files without `.tsx`, using `node --env-file=.env <file>.ts`.
+- Keysely is used as a runtime query builder only, not as a migration or schema management tool. Schema changes go through SQL files applied with `pnpm run-sql`.
+- Instance-table primary keys are text, holding domain IDs like `T-12` and `REC-LAGER-V3`. Not UUIDs or serial integers.
+- Neon project name: onthology (polished-dawn-91114791)
