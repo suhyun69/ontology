@@ -1,0 +1,11 @@
+{
+  "name": "@ontology/ontology",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "node --env-file=../../.env src/index.ts",
+    "typecheck": "tsc --noEmit"
+  }
+}
