@@ -21,7 +21,7 @@ type DeferStartParams = {
 
 /**
  * Only a batch that has not started yet can be deferred. See
- * sql/01-manufacturing-foundation.sql; nothing in the schema constrains the
+ * seeds/01-manufacturing-foundation.sql; nothing in the schema constrains the
  * column, so the seed's vocabulary is the only definition of the status set.
  */
 const DEFERRABLE_STATUS = "queued";

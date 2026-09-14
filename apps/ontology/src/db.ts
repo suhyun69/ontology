@@ -14,7 +14,7 @@ if (connectionString === undefined || connectionString === "") {
 
 // ------------------------------------------------------------ column helpers
 //
-// Mirrors sql/01-manufacturing-foundation.sql.
+// Mirrors seeds/01-manufacturing-foundation.sql.
 
 // numeric columns are typed string: node-postgres hands numerics back as
 // strings rather than lose precision on values that do not fit a float64.

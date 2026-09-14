@@ -46,7 +46,7 @@ function parsePositiveInteger(raw: string, what: string, max: number): number {
  * The result is always a bound parameter, so this is about types, not safety.
  *
  * The cases are the data_type vocabulary of the metadata rows, not Postgres
- * types -- see sql/01-manufacturing-foundation.sql. A value that falls through
+ * types -- see seeds/01-manufacturing-foundation.sql. A value that falls through
  * to the default is compared as text, which is right for string and enum and
  * wrong for anything the ontology gains later, so unknown types are named
  * rather than assumed.
