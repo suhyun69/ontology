@@ -2,8 +2,24 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { sql } from "kysely";
 import { closeDb, db } from "./db.ts";
+import { HttpError } from "./errors.ts";
+import { metaRoutes } from "./routes/meta.ts";
+import { objectRoutes } from "./routes/objects.ts";
 
 const app = new Hono();
+
+// Mounted before the instance routes: "meta" would otherwise be a candidate
+// for :type, and /api/objects/meta/types would read as type "meta", id "types".
+app.route("/api/objects/meta", metaRoutes);
+app.route("/api/objects", objectRoutes);
+
+app.onError((error, c) => {
+  if (error instanceof HttpError) {
+    return c.json({ error: error.message }, error.status);
+  }
+  console.error(error);
+  return c.json({ error: "internal server error" }, 500);
+});
 
 // Reports process liveness and whether the database actually answers, so a
 // failing health check distinguishes "server down" from "server up, db down".
