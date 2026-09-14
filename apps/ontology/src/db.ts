@@ -13,6 +13,8 @@ if (connectionString === undefined || connectionString === "") {
 }
 
 // ------------------------------------------------------------ column helpers
+//
+// Mirrors sql/01-manufacturing-foundation.sql.
 
 // numeric columns are typed string: node-postgres hands numerics back as
 // strings rather than lose precision on values that do not fit a float64.
@@ -21,80 +23,89 @@ type Numeric = string;
 type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 /**
- * jsonb holding an object. pg runs plain objects through JSON.stringify, so
- * they can be written as-is.
+ * A text column holding one of a known set of values.
+ *
+ * The schema declares no CHECK constraints, so the database will accept any
+ * text at all. Reads are therefore plain string -- narrowing them would let
+ * TypeScript rule out a value that can really be in the column -- while writes
+ * are held to the set the seed and the application actually use.
  */
-type JsonObject<T> = ColumnType<T, T | string | undefined, T | string>;
+type Enum<T extends string> = ColumnType<string, T, T>;
 
-/**
- * jsonb holding an array. Writes must be pre-stringified: pg serialises a JS
- * array as a Postgres array literal, which jsonb rejects.
- */
-type JsonArray<T> = ColumnType<T, string | undefined, string>;
+/** As Enum, for a column Postgres fills in via DEFAULT. */
+type DefaultedEnum<T extends string> = ColumnType<string, T | undefined, T>;
+
+/** jsonb holding an object; pg runs plain objects through JSON.stringify. */
+type JsonObject<T> = ColumnType<T, T | string, T | string>;
+
+/** As JsonObject, for a nullable column with no default. */
+type NullableJsonObject<T> = ColumnType<T | null, T | string | null, T | string | null>;
 
 // ========================================================== instance tables
 
 // One set of these exists per instance schema. The Database interface below
 // keys them by "<schema>.<table>" so a query names the schema it reads.
 
-type Shift = "day" | "swing" | "night";
-type TankStatus = "idle" | "fermenting" | "cleaning" | "maintenance";
-type LineStatus = "idle" | "running" | "paused" | "maintenance";
-type BatchStatus = "planned" | "fermenting" | "conditioning" | "bottled" | "cancelled";
-type BottlingRunStatus = "queued" | "running" | "paused" | "done" | "aborted";
-type MaintenanceType = "cleaning" | "repair" | "inspection" | "calibration";
-type MaintenanceStatus = "open" | "in_progress" | "done" | "cancelled";
+type Shift = "Day" | "Night";
+type TankStatus = "idle" | "fermenting";
+type LineStatus = "idle" | "running";
+type BatchStatus = "queued" | "fermenting";
+type BottlingRunStatus = "queued" | "running" | "done";
+type MaintenanceType = "corrective" | "preventive" | "cleaning";
+type MaintenanceStatus = "scheduled" | "in_progress" | "completed";
 /** Maintenance is polymorphic; target_type holds the target's object_type api_name. */
-type MaintenanceTargetType = "Tank" | "Line";
+type MaintenanceTargetType = "tank" | "line";
 
-/** One sample of a recipe's target gravity curve. */
-export type SugarPoint = { day: number; gravity: number };
+/**
+ * A recipe's target gravity curve, keyed by day: {"day_1": 1.050, ...}.
+ * An object rather than a list, so the days sampled vary per recipe.
+ */
+export type SugarCurve = Record<string, number>;
 
 export type OperatorTable = {
   id: string;
   name: string;
-  certifications: Generated<string[]>;
-  shift: Shift | null;
+  certifications: string[] | null;
+  shift: Enum<Shift>;
 };
 
 export type RecipeTable = {
   id: string;
   name: string;
-  target_sugar_curve: JsonArray<SugarPoint[]>;
+  target_sugar_curve: JsonObject<SugarCurve>;
   fermentation_days: number;
-  required_ingredients: Generated<string[]>;
+  required_ingredients: string[] | null;
   notes: string | null;
 };
 
 export type TankTable = {
   id: string;
   name: string;
-  /** Litres. */
+  /** Hectolitres, per the property row's display name. */
   capacity: Numeric;
-  status: Generated<TankStatus>;
+  status: Enum<TankStatus>;
   /** Degrees Celsius; null until a sensor reports. */
   current_temperature: Numeric | null;
-  commissioned_at: Timestamp | null;
+  commissioned_at: Timestamp;
 };
 
 export type LineTable = {
   id: string;
   name: string;
-  status: Generated<LineStatus>;
-  commissioned_at: Timestamp | null;
+  status: Enum<LineStatus>;
+  commissioned_at: Timestamp;
 };
 
 export type BatchTable = {
   id: string;
   recipe_id: string;
-  /** Litres. */
-  target_volume: Numeric;
-  status: Generated<BatchStatus>;
+  target_volume: Numeric | null;
+  status: Enum<BatchStatus>;
   planned_start: Timestamp | null;
-  /** Degrees Plato. */
+  /** Specific gravity, matching the recipe's curve. */
   current_sugar_level: Numeric | null;
   current_temperature: Numeric | null;
-  days_fermenting: Generated<number>;
+  days_fermenting: number | null;
   assigned_tank_id: string | null;
   assigned_operator_id: string | null;
   last_operator_note: string | null;
@@ -105,16 +116,15 @@ export type BottlingRunTable = {
   batch_id: string;
   line_id: string;
   planned_start: Timestamp | null;
-  status: Generated<BottlingRunStatus>;
+  status: Enum<BottlingRunStatus>;
   assigned_operator_id: string | null;
 };
 
 export type QualityTestTable = {
   id: string;
   batch_id: string;
-  test_date: Generated<Timestamp>;
+  test_date: Timestamp;
   ph: Numeric | null;
-  /** Degrees Plato. */
   sugar_level: Numeric | null;
   notes: string | null;
   /** Free text, not a foreign key: an external lab has no operator row. */
@@ -123,12 +133,12 @@ export type QualityTestTable = {
 
 export type MaintenanceLogTable = {
   id: string;
-  target_type: MaintenanceTargetType;
+  target_type: Enum<MaintenanceTargetType>;
   /** Points at a tank or a line depending on target_type; no foreign key. */
   target_id: string;
-  type: MaintenanceType;
-  status: Generated<MaintenanceStatus>;
-  started_at: Generated<Timestamp>;
+  type: Enum<MaintenanceType>;
+  status: Enum<MaintenanceStatus>;
+  started_at: Timestamp | null;
   completed_at: Timestamp | null;
   notes: string | null;
 };
@@ -145,16 +155,16 @@ export type MaintenanceLogTable = {
 // meta routes must always set it.
 
 export type ObjectTypeStatus = "active" | "experimental" | "deprecated";
-export type ObjectTypeVisibility = "normal" | "prominent" | "hidden";
+export type ObjectTypeVisibility = "visible" | "prominent" | "hidden";
 export type PropertyDataType =
   | "string"
-  | "integer"
-  | "double"
+  | "number"
   | "boolean"
-  | "timestamp"
+  | "enum"
+  | "datetime"
   | "date"
-  | "string_array"
-  | "json";
+  | "json"
+  | "string[]";
 export type Cardinality = "one_to_one" | "one_to_many" | "many_to_one" | "many_to_many";
 
 export type ObjectTypeTable = {
@@ -164,12 +174,12 @@ export type ObjectTypeTable = {
   /** Display text; editable without breaking any client. */
   name: string;
   description: string | null;
-  status: Generated<ObjectTypeStatus>;
-  visibility: Generated<ObjectTypeVisibility>;
+  status: DefaultedEnum<ObjectTypeStatus>;
+  visibility: DefaultedEnum<ObjectTypeVisibility>;
   point_of_contact: string | null;
   edits_enabled: Generated<boolean>;
-  /** Postgres schema the instance rows live in. */
-  schema: Generated<string>;
+  /** Postgres schema the instance rows live in. No default; every row states it. */
+  schema: string;
   datasource_table: string;
 };
 
@@ -179,7 +189,7 @@ export type PropertyTable = {
   /** Camel-cased handle clients use; unique within the object type, not globally. */
   api_name: string;
   name: string;
-  data_type: PropertyDataType;
+  data_type: Enum<PropertyDataType>;
   required: Generated<boolean>;
   is_title: Generated<boolean>;
   is_primary_key: Generated<boolean>;
@@ -199,7 +209,7 @@ export type LinkTable = {
   target_type_id: string;
   /** The foreign key property on the source that realises the link. */
   via_property_id: string;
-  cardinality: Cardinality;
+  cardinality: Enum<Cardinality>;
 };
 
 export type ActionTypeTable = {
@@ -214,16 +224,17 @@ export type ActionTypeTable = {
 
 export type AuditLogTable = {
   id: Generated<string>;
-  action_type_id: string | null;
-  /** Snapshot: the log still has to say what ran after a rename or a delete. */
+  /** NOT NULL here, so an action_type cannot be deleted while a log row cites it. */
+  action_type_id: string;
+  /** Snapshot: the log still reads correctly after the action is renamed. */
   action_api_name: string;
-  target_type_id: string | null;
+  target_type_id: string;
   target_type_api_name: string;
   /** The instance id the action ran against, e.g. B-2105. */
   target_id: string;
   actor: string;
-  params: JsonObject<Record<string, unknown>>;
-  result: JsonObject<Record<string, unknown>>;
+  params: NullableJsonObject<Record<string, unknown>>;
+  result: NullableJsonObject<Record<string, unknown>>;
   created_at: Generated<Timestamp>;
 };
 
@@ -231,7 +242,7 @@ export type AuditLogTable = {
 
 /**
  * Instance schemas this app will query. Anything reaching a query builder as a
- * schema name has to be checked against this first — object_type.schema is a
+ * schema name has to be checked against this first -- object_type.schema is a
  * plain text column, so a bad or hostile row must not become an identifier.
  */
 export const INSTANCE_SCHEMAS = ["manufacturing"] as const;

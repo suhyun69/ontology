@@ -20,10 +20,11 @@ type DeferStartParams = {
 };
 
 /**
- * 아직 시작하지 않은 배치만 시작일을 미룰 수 있다. 스키마에서는 상태값을
- * lowercase로 적는다; 전체 목록은 sql/manufacturing.sql 참고.
+ * 아직 시작하지 않은 배치만 시작일을 미룰 수 있다. sql/01-manufacturing-foundation.sql
+ * 참고 — 스키마에 이 컬럼을 제약하는 게 전혀 없어서, 시드 데이터의 값들이
+ * 사실상 유일한 상태값 정의다.
  */
-const DEFERRABLE_STATUS = "planned";
+const DEFERRABLE_STATUS = "queued";
 
 async function deferStart(
   batch: BatchInstance,

@@ -9,7 +9,7 @@ import type { RegisteredAction } from "./types.ts";
  * ontology declares it, the server just has not implemented it yet.
  */
 export const actionHandlers: Record<string, RegisteredAction> = {
-  "Batch.deferStart": batchDeferStart,
+  "batch.deferStart": batchDeferStart,
 };
 
 export function findActionHandler(
