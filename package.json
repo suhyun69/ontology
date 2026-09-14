@@ -7,7 +7,8 @@
     "node": ">=24"
   },
   "scripts": {
-    "typecheck": "pnpm -r typecheck"
+    "run-sql": "node --env-file=.env run-sql.ts",
+    "typecheck": "tsc --noEmit && pnpm -r typecheck"
   },
   "devDependencies": {
     "@types/node": "^26.5.1",
