@@ -383,11 +383,14 @@ INSERT INTO recipe (id, name, target_sugar_curve, fermentation_days, required_in
 INSERT INTO operator (id, name, certifications, shift) VALUES
   ('OP-PARK-KW', 'Park Kyungwon', '{"forklift", "confined space", "cellar operations"}', 'day');
 
+-- Note the two different units in play: the recipe curve is sampled as specific
+-- gravity, while current_sugar_level is degrees Plato. At day 8 the curve
+-- interpolates to roughly 1.0166 SG, which is (1.0166 - 1) * 1000 / 4 ≈ 4.15 °P.
 INSERT INTO batch (
   id, recipe_id, target_volume, status, planned_start,
   current_sugar_level, current_temperature, days_fermenting,
   assigned_tank_id, assigned_operator_id, last_operator_note
 ) VALUES
   ('B-2105', 'REC-LAGER-V3', 4800.00, 'fermenting', '2026-09-06T07:00:00Z',
-   1.019, 11.40, 8,
+   4.15, 11.40, 8,
    'T-12', 'OP-PARK-KW', 'Krausen dropped overnight; gravity tracking the curve.');
