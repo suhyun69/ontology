@@ -20,7 +20,7 @@ type DeferStartParams = {
 };
 
 /**
- * 아직 시작하지 않은 배치만 시작일을 미룰 수 있다. sql/01-manufacturing-foundation.sql
+ * 아직 시작하지 않은 배치만 시작일을 미룰 수 있다. seeds/01-manufacturing-foundation.sql
  * 참고 — 스키마에 이 컬럼을 제약하는 게 전혀 없어서, 시드 데이터의 값들이
  * 사실상 유일한 상태값 정의다.
  */
