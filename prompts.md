@@ -57,3 +57,31 @@ One action_type row: Batch.deferStart, description "Postpone the batch's planned
 
 **Test data** (just enough to verify routes): one Tank `T-12`, one Recipe `REC-LAGER-V3` with a sample sugar curve, one Operator `Park Kyungwon`, one Batch `B-2105` linked to all three with status `fermenting`.
 """
+
+"""
+Create four Hono routes under `/api/objects` that read metadata, using `datasource_table` and `datasource_column` to construct queries.
+
+1. Object instance routes file
+
+- `GET /api/objects/:type` — list instances of a type. Optional query-param filters.
+- `GET /api/objects/:type/:id` — get one instance with bidirectional one-hop link resolution.
+  - Outbound: links where `source_type_id` matches; follow `via_property_id → datasource_column` to read the FK, then `target_type_id → datasource_table` for the target.
+  - Inbound: links where `target_type_id` matches; find source instances whose FK points back.
+  - Labels: `api_name`/`name` outbound, `inverse_api_name`/`inverse_name` inbound. Check `cardinality` for array vs single.
+
+Validate a type exists in `object_type` before any work.   
+
+2. Meta routes file
+  
+- `GET /api/objects/meta/types` — list all object types.
+- `GET /api/objects/meta/types/:type` — bundle of one type's metadata: object_type columns, its property rows with all their columns, links in both directions, actions with `parameter_schema`.
+
+Use api_name for lookups, never display name.
+
+In the Kysely `Database` interface:
+- Keep metadata and audit tables schema-agnostic because they will have the exact same shape for other schemas, letting you use withSchema for `meta` routes. This gives them compile-time typing.
+- Add the instance tables prefixed with their schema, properly typed.
+
+In the instance routes, validate the schema is one of our instance schemas before using it.
+Prevent raw string-based SQL injection. 
+"""
