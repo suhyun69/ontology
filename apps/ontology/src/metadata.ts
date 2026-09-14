@@ -121,6 +121,15 @@ export async function findObjectType(apiName: string): Promise<TypeLookup | null
   return null;
 }
 
+/** findObjectType, but a miss is a 404 rather than something to handle. */
+export async function requireObjectType(apiName: string): Promise<TypeLookup> {
+  const lookup = await findObjectType(apiName);
+  if (lookup === null) {
+    throw new HttpError(404, `unknown object type: ${apiName}`);
+  }
+  return lookup;
+}
+
 /** Resolves a link's endpoint, which metadata stores by id rather than api_name. */
 export async function objectTypeById(
   metaSchema: InstanceSchema,
@@ -203,6 +212,21 @@ export function loadActions(
     .where("object_type_id", "=", objectTypeId)
     .orderBy("api_name")
     .execute();
+}
+
+/** Actions are addressed by api_name within their object type. */
+export async function findActionType(
+  metaSchema: InstanceSchema,
+  objectTypeId: string,
+  apiName: string,
+): Promise<ActionTypeRow | undefined> {
+  return await db
+    .withSchema(metaSchema)
+    .selectFrom("action_type")
+    .selectAll()
+    .where("object_type_id", "=", objectTypeId)
+    .where("api_name", "=", apiName)
+    .executeTakeFirst();
 }
 
 export async function propertyById(
