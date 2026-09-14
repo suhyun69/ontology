@@ -395,6 +395,16 @@ INSERT INTO batch (
    4.15, 11.40, 8,
    'T-12', 'OP-PARK-KW', 'Krausen dropped overnight; gravity tracking the curve.');
 
+-- A batch that has not started yet. Batch.deferStart only accepts a batch in
+-- 'planned', so without one its success path -- and the audit_log row it
+-- writes -- cannot be exercised at all.
+INSERT INTO batch (
+  id, recipe_id, target_volume, status, planned_start,
+  days_fermenting, assigned_operator_id, last_operator_note
+) VALUES
+  ('B-2106', 'REC-LAGER-V3', 4800.00, 'planned', '2026-10-05T07:00:00Z',
+   0, 'OP-PARK-KW', 'Waiting on T-12 to free up.');
+
 -- Rows on the far side of the two inbound links into Batch. Without them the
 -- inverse direction (Batch.bottlingRuns, Batch.qualityTests) can only ever
 -- answer with an empty array, so a route walking it cannot be told apart from
