@@ -255,12 +255,31 @@ const INVERSE_CARDINALITY: Record<Cardinality, Cardinality> = {
   many_to_many: "many_to_many",
 };
 
+/**
+ * Narrows link.cardinality, which the schema stores as unconstrained text.
+ *
+ * Nothing in the database stops a row from naming something else, and guessing
+ * at one would silently decide whether a link answers with an array or a single
+ * object, so an unrecognised value is a fault in the metadata.
+ */
+export function toCardinality(value: string): Cardinality {
+  if (value in INVERSE_CARDINALITY) {
+    return value as Cardinality;
+  }
+  throw new HttpError(
+    500,
+    `link declares cardinality ${JSON.stringify(value)}, which is not one of: ` +
+      Object.keys(INVERSE_CARDINALITY).join(", "),
+  );
+}
+
 /** How the target type sees the link the source type declared. */
-export function inverseCardinality(cardinality: Cardinality): Cardinality {
-  return INVERSE_CARDINALITY[cardinality];
+export function inverseCardinality(cardinality: string): Cardinality {
+  return INVERSE_CARDINALITY[toCardinality(cardinality)];
 }
 
 /** Whether a side of a link holds many instances or at most one. */
-export function isPlural(cardinality: Cardinality): boolean {
-  return cardinality === "one_to_many" || cardinality === "many_to_many";
+export function isPlural(cardinality: string): boolean {
+  const known = toCardinality(cardinality);
+  return known === "one_to_many" || known === "many_to_many";
 }

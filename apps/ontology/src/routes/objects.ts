@@ -16,6 +16,7 @@ import {
   primaryKeyProperty,
   propertyById,
   requireObjectType,
+  toCardinality,
 } from "../metadata.ts";
 import type { LinkRow, PropertyRow, TypeLookup } from "../metadata.ts";
 
@@ -43,17 +44,16 @@ function parsePositiveInteger(raw: string, what: string, max: number): number {
 /**
  * Turns a query-string value into something comparable against the column.
  * The result is always a bound parameter, so this is about types, not safety.
+ *
+ * The cases are the data_type vocabulary of the metadata rows, not Postgres
+ * types -- see sql/01-manufacturing-foundation.sql. A value that falls through
+ * to the default is compared as text, which is right for string and enum and
+ * wrong for anything the ontology gains later, so unknown types are named
+ * rather than assumed.
  */
 function coerceFilterValue(property: PropertyRow, raw: string): unknown {
   switch (property.data_type) {
-    case "integer": {
-      const value = Number(raw);
-      if (!Number.isInteger(value)) {
-        throw new HttpError(400, `${property.api_name} must be an integer, got ${JSON.stringify(raw)}`);
-      }
-      return value;
-    }
-    case "double": {
+    case "number": {
       const value = Number(raw);
       if (!Number.isFinite(value)) {
         throw new HttpError(400, `${property.api_name} must be a number, got ${JSON.stringify(raw)}`);
@@ -65,7 +65,7 @@ function coerceFilterValue(property: PropertyRow, raw: string): unknown {
       if (raw === "false") return false;
       throw new HttpError(400, `${property.api_name} must be true or false, got ${JSON.stringify(raw)}`);
     }
-    case "timestamp":
+    case "datetime":
     case "date": {
       // Postgres parses the literal; an unparseable one is a 400, not a 500.
       if (Number.isNaN(Date.parse(raw))) {
@@ -73,11 +73,19 @@ function coerceFilterValue(property: PropertyRow, raw: string): unknown {
       }
       return raw;
     }
-    case "string_array":
+    // Comparing these with `=` against a scalar is a Postgres type error, so
+    // they are refused here rather than surfacing as a 500.
+    case "string[]":
     case "json":
       throw new HttpError(400, `${property.api_name} is a ${property.data_type} and cannot be filtered on`);
-    default:
+    case "string":
+    case "enum":
       return raw;
+    default:
+      throw new HttpError(
+        400,
+        `${property.api_name} has data type ${property.data_type}, which cannot be filtered on`,
+      );
   }
 }
 
@@ -154,7 +162,7 @@ async function resolveOutbound(
   const view: LinkView = {
     name: link.name,
     direction: "outbound",
-    cardinality: link.cardinality,
+    cardinality: toCardinality(link.cardinality),
     targetType: targetType.api_name,
     value: plural ? [] : null,
   };

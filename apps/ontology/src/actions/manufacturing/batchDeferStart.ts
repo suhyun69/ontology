@@ -20,10 +20,11 @@ type DeferStartParams = {
 };
 
 /**
- * Only a batch that has not started yet can be deferred. The schema spells the
- * status lowercase; see sql/manufacturing.sql for the full set.
+ * Only a batch that has not started yet can be deferred. See
+ * sql/01-manufacturing-foundation.sql; nothing in the schema constrains the
+ * column, so the seed's vocabulary is the only definition of the status set.
  */
-const DEFERRABLE_STATUS = "planned";
+const DEFERRABLE_STATUS = "queued";
 
 async function deferStart(
   batch: BatchInstance,

@@ -10,7 +10,10 @@ import { columnRef, findActionType, loadProperties, primaryKeyProperty, requireO
 
 export const actionRoutes = new Hono();
 
-/** parameter_schema is authored as JSON Schema 2020-12; see sql/manufacturing.sql. */
+/**
+ * parameter_schema rows carry no $schema, so the draft is set here. See
+ * sql/01-manufacturing-foundation.sql.
+ */
 const SCHEMA_DRAFT = "2020-12";
 
 /**
