@@ -5,6 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
+    "dev": "node --watch --env-file=../../.env src/index.ts",
     "start": "node --env-file=../../.env src/index.ts",
     "typecheck": "tsc --noEmit"
   },
