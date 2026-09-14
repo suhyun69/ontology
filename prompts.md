@@ -85,3 +85,19 @@ In the Kysely `Database` interface:
 In the instance routes, validate the schema is one of our instance schemas before using it.
 Prevent raw string-based SQL injection. 
 """
+
+"""
+Add an action invocation route and the first handler.
+
+**Route:** `POST /api/objects/:type/:id/actions/:actionName` in its own route file. Look up the action in `action_type`, validate the body against `parameter_schema` with cfworker/json-schema, dispatch via a plain-object handler map keyed by `${objectTypeApiName}.${actionApiName}`. Every handler takes as input the object instance it was called on, optional params, and the action context. In the *implementations*, these arguments should be typed.
+
+**Handler:** Batch.deferStart at `apps/ontology/src/actions/manufacturing/batchDeferStart.ts`.
+
+Parameter: `newPlannedStart` (datetime string). Shape is already validated by the route via cfworker/json-schema; the handler does business validation and the write.
+
+The handler should:
+
+1. Confirm the batch's `status` is `queued` and `newPlannedStart` is in the future. Throw descriptively otherwise.
+2. In one Postgres transaction: update `planned_start` on the batch, insert an audit_log row using the dual-snapshot pattern (both UUID and api_name columns populated).
+3. Return the updated batch.
+"""
