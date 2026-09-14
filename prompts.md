@@ -5,3 +5,7 @@ install pg at the workspace root
 Create a CLi script run-sql.ts at the repo root taking the path to a .sql file, connects via pg using DATABASE_URL, executes it, and reports the result. Add it as run-sql script to the root package.json, invoking via node --env-file=__.
 
 claude mcp add --transport http neon --scope project "https://mcp.neon.tech/mcp?readonly=true"
+
+Install hono, @hono/node-server, kysely, @cfworker/json-xhema, and pg in apps/onthology
+
+In apps/ontology/src, set up index.ts with a Hono app and a /health route, and db.ts with a Kysely connection reading DATABASE_URL from the worksapce root .env. Add a dev script that runs the entry point with --watch.
