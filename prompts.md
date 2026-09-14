@@ -1,0 +1,1 @@
+set up a pnpm workspace project for a "run ts directly" worklow. Add a tsconfig.base.json with settings turned for a "Node 26 runs TS natively" worklow and .gitignore One workspace: apps/ontology/ with its own package.json and tsconfig.json extending the base. Initialize a git repo.
