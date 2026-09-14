@@ -101,3 +101,7 @@ The handler should:
 2. In one Postgres transaction: update `planned_start` on the batch, insert an audit_log row using the dual-snapshot pattern (both UUID and api_name columns populated).
 3. Return the updated batch.
 """
+
+"""
+Look at 01-manufacturing-foundation.sql and if necessary update our Kysely database interface types to align with it.
+"""
