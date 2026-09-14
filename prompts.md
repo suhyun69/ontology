@@ -3,3 +3,5 @@ set up a pnpm workspace project for a "run ts directly" worklow. Add a tsconfig.
 install pg at the workspace root
 
 Create a CLi script run-sql.ts at the repo root taking the path to a .sql file, connects via pg using DATABASE_URL, executes it, and reports the result. Add it as run-sql script to the root package.json, invoking via node --env-file=__.
+
+claude mcp add --transport http neon --scope project "https://mcp.neon.tech/mcp?readonly=true"
