@@ -394,3 +394,18 @@ INSERT INTO batch (
   ('B-2105', 'REC-LAGER-V3', 4800.00, 'fermenting', '2026-09-06T07:00:00Z',
    4.15, 11.40, 8,
    'T-12', 'OP-PARK-KW', 'Krausen dropped overnight; gravity tracking the curve.');
+
+-- Rows on the far side of the two inbound links into Batch. Without them the
+-- inverse direction (Batch.bottlingRuns, Batch.qualityTests) can only ever
+-- answer with an empty array, so a route walking it cannot be told apart from
+-- one that is silently broken.
+
+INSERT INTO line (id, name, status, commissioned_at) VALUES
+  ('L-03', 'Line 3', 'idle', '2022-05-11T08:00:00Z');
+
+INSERT INTO bottling_run (id, batch_id, line_id, planned_start, status, assigned_operator_id) VALUES
+  ('BR-8801', 'B-2105', 'L-03', '2026-09-24T06:00:00Z', 'queued', 'OP-PARK-KW');
+
+INSERT INTO quality_test (id, batch_id, test_date, ph, sugar_level, notes, tested_by) VALUES
+  ('QT-5501', 'B-2105', '2026-09-10T10:00:00Z', 4.42, 6.80, 'Day 4 gravity check.', 'Park Kyungwon'),
+  ('QT-5502', 'B-2105', '2026-09-14T10:00:00Z', 4.28, 4.15, 'Day 8 gravity check.', 'Park Kyungwon');
