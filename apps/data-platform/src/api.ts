@@ -153,8 +153,37 @@ export function loadObjectType(apiName: string): Promise<TypeDetail> {
   return request(`/api/objects/meta/types/${encodeURIComponent(apiName)}`);
 }
 
-export function listInstances(type: string): Promise<InstancePage> {
-  return request(`/api/objects/${encodeURIComponent(type)}`);
+/** One action, as the audit log recorded it. */
+export type AuditEntry = {
+  /** The api_name snapshotted when it ran, which survives a later rename. */
+  action: string;
+  /** What that action is called now. */
+  actionName: string;
+  actor: string;
+  params: Record<string, unknown> | null;
+  result: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+export type AuditPage = {
+  type: string;
+  id: string;
+  limit: number;
+  count: number;
+  entries: AuditEntry[];
+};
+
+/** `filters` are matched against property api_names by the list route. */
+export function listInstances(
+  type: string,
+  filters: Readonly<Record<string, string>> = {},
+): Promise<InstancePage> {
+  const query = new URLSearchParams(filters).toString();
+  return request(`/api/objects/${encodeURIComponent(type)}${query === "" ? "" : `?${query}`}`);
+}
+
+export function loadAudit(type: string, id: string): Promise<AuditPage> {
+  return request(`/api/objects/${encodeURIComponent(type)}/${encodeURIComponent(id)}/audit`);
 }
 
 export function loadInstance(type: string, id: string): Promise<InstanceDetail> {

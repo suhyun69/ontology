@@ -38,9 +38,13 @@ function round(value: number): number {
   return Math.round(value * 1e5) / 1e5;
 }
 
-type Sample = { day: number; gravity: number };
+export type Sample = { day: number; gravity: number };
 
 /** 커브의 점들을 날짜 순으로. `day_<n>` 형태가 아닌 키는 무시한다. */
+export function curvePoints(curve: SugarCurve): Sample[] {
+  return samples(curve);
+}
+
 function samples(curve: SugarCurve): Sample[] {
   const points: Sample[] = [];
 
@@ -117,6 +121,69 @@ export function deviationFor(
     // 의도적으로 한쪽 방향만 본다: 커브보다 앞서가는 배치는 뒤처진 게 아니다.
     behind: delta >= SLIPPING_TOLERANCE,
   };
+}
+
+/**
+ * 특정 날짜의 목표값을 실제로 읽어낸 커브 포인트들: 그 날짜가 샘플과
+ * 정확히 겹치면 그 샘플 하나, 아니면 그 사이에 걸친 양쪽 샘플, 샘플링
+ * 범위 밖이면 가장 가까운 끝점.
+ *
+ * 목표값이 실제로 거기서 도출된 포인트들이라서, UI에서 이것들을 짚어줄
+ * 가치가 있다.
+ */
+export function bracketingDays(curve: SugarCurve, day: number): Set<number> {
+  const points = samples(curve);
+  const first = points.at(0);
+  const last = points.at(-1);
+  if (first === undefined || last === undefined) return new Set();
+
+  if (day <= first.day) return new Set([first.day]);
+  if (day >= last.day) return new Set([last.day]);
+
+  let previous = first;
+  for (const point of points) {
+    if (point.day === day) return new Set([day]);
+    if (day < point.day) return new Set([previous.day, point.day]);
+    previous = point;
+  }
+
+  return new Set([last.day]);
+}
+
+/** 배치가 발효를 진행해온 기간. */
+export type Window = { from: Date; to: Date };
+
+/**
+ * 이 배치가 지금 탱크에 들어가 있었던 기간.
+ *
+ * 기록된 시작일이 있으면 그걸 기준으로 삼는다 — 배치 자신이 말하는 값이기
+ * 때문. 없으면 발효일수로 대신 계산한다.
+ */
+export function fermentationWindow(
+  plannedStart: string | null,
+  daysFermenting: number | null,
+  now: Date,
+): Window | null {
+  if (plannedStart !== null) {
+    const started = Date.parse(plannedStart);
+    if (!Number.isNaN(started)) return { from: new Date(started), to: now };
+  }
+
+  if (daysFermenting !== null) {
+    const from = new Date(now);
+    from.setDate(from.getDate() - daysFermenting);
+    return { from, to: now };
+  }
+
+  return null;
+}
+
+/** 타임스탬프가 기간 안에 들어가는지. 파싱 불가능한 값은 포함 안 됨. */
+export function withinWindow(stamp: unknown, window: Window | null): boolean {
+  if (window === null || typeof stamp !== "string") return false;
+
+  const at = Date.parse(stamp);
+  return !Number.isNaN(at) && at >= window.from.getTime() && at <= window.to.getTime();
 }
 
 /** numeric 컬럼을 파싱한다 — API는 정밀도를 지키려고 문자열로 보낸다. */
