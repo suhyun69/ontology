@@ -167,3 +167,17 @@ POST to localhost:3456/api/objects/batch/B-2130/actions/deferStart with newPlann
 """
 run pnpm run-sql seeds/01-manufacturing-foundation.sql to reset the data
 """
+
+"""
+Add a Batch Investigation Workspace app.
+
+Top: three metric cards. "Fermenting Batches" (count with status=fermenting), "Behind Target" (fermenting batches whose currentSugarLevel is currently 0.008 or more behind target), "Recent Tank Maintenance" (fermenting batches whose tank has maintenance in the last 7 days).
+
+Left: batch table. Fetch all batches using the list route, and also the target sugar curves of their recipes. Columns: id, recipe name, sugar level vs target (color-coded green within 0.005, amber within 0.008, red beyond), days fermenting, tank, status. Filters: status, tank, "behind target only" toggle. Clicking selects for the detail panel.
+
+Right: placeholder only, detail panel comes next cycle.
+
+Date windows compute against COURSE_NOW, injected in the frontend environment.
+
+Match the visual style of the other pages.
+"""
