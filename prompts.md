@@ -109,3 +109,13 @@ Look at 01-manufacturing-foundation.sql and if necessary update our Kysely datab
 """
 Create an apps/data-platform workspace. package.json with `type: module`, tsconfig.json extending the base and adding JSX + DOM libs. Install @blueprintjs/core, @blueprintjs/icons, react@18, react-dom@18, @types/react@18, @types/react-dom@18, @vitejs/plugin-react, vite. Scaffold the Vite entry point — index.html, vite.config.ts, main.tsx, App.tsx with a minimal React shell. Add a dev script.
 """
+
+"""
+Build an Ontology Manager page. We want it to look visually like the attached screenshots. Use Blueprintjs components and CSS to accomplish this. In case the screenshots show something we lack data for, omit it.
+
+Make `display_name` and `description` inline-editable (add a `PATCH /api/objects/meta/types/:type` route to update the `object_type` row).
+
+For the links section, use a more straightforward approach to replace the interactive graph.
+
+Add an extra left rail that lists all object types, showing display name and instance count. Clicking selects a type.
+"""
