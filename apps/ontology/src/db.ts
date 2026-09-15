@@ -23,6 +23,15 @@ type Numeric = string;
 type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 /**
+ * As Timestamp, for a column Postgres fills in via DEFAULT.
+ *
+ * Spelled out rather than written Generated<Timestamp>: nesting one ColumnType
+ * inside another does not compose, and a select would hand back the wrapper
+ * instead of the Date a read actually produces.
+ */
+type DefaultedTimestamp = ColumnType<Date, Date | string | undefined, Date | string>;
+
+/**
  * A text column holding one of a known set of values.
  *
  * The schema declares no CHECK constraints, so the database will accept any
@@ -235,7 +244,7 @@ export type AuditLogTable = {
   actor: string;
   params: NullableJsonObject<Record<string, unknown>>;
   result: NullableJsonObject<Record<string, unknown>>;
-  created_at: Generated<Timestamp>;
+  created_at: DefaultedTimestamp;
 };
 
 // ================================================================= database

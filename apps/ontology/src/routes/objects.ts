@@ -6,9 +6,11 @@ import { HttpError } from "../errors.ts";
 import { DEFAULT_LIMIT, MAX_LIMIT, selectInstances } from "../instances.ts";
 import type { Instance } from "../instances.ts";
 import {
+  AUDIT_LIMIT,
   columnRef,
   inverseCardinality,
   isPlural,
+  loadAuditEntries,
   loadInboundLinks,
   loadOutboundLinks,
   loadProperties,
@@ -247,5 +249,33 @@ objectRoutes.get("/:type/:id", async (c) => {
     id: instance[key.api_name],
     properties: instance,
     links: Object.fromEntries(resolved),
+  });
+});
+
+// ----------------------------------------- GET /api/objects/:type/:id/audit
+
+/**
+ * What has been done to one instance, newest first.
+ *
+ * Only the type is checked, not the instance. Audit rows are written to outlive
+ * what they describe -- that is the point of the api_name snapshots on them --
+ * so a history stays readable after its row is gone, and an id with nothing
+ * against it is an empty history rather than a 404.
+ *
+ * `count` is returned next to `limit` so a truncated history is visible as one
+ * rather than looking like the whole story.
+ */
+objectRoutes.get("/:type/:id/audit", async (c) => {
+  const { metaSchema, objectType } = await requireObjectType(c.req.param("type"));
+  const id = c.req.param("id");
+
+  const entries = await loadAuditEntries(metaSchema, objectType.id, id);
+
+  return c.json({
+    type: objectType.api_name,
+    id,
+    limit: AUDIT_LIMIT,
+    count: entries.length,
+    entries,
   });
 });

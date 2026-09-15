@@ -273,6 +273,66 @@ export async function propertyById(
   return property;
 }
 
+// ------------------------------------------------------------------ audit
+
+/**
+ * What one action did to one instance.
+ *
+ * `action` is the api_name the log snapshotted when it ran, so the entry still
+ * reads correctly after a rename; `actionName` is what that action is called
+ * now. The two can differ, and both are worth having -- one says what happened,
+ * the other says what to call it today.
+ */
+export type AuditEntry = {
+  action: string;
+  actionName: string;
+  actor: string;
+  params: Record<string, unknown> | null;
+  result: Record<string, unknown> | null;
+  createdAt: Date;
+};
+
+/** Most audit histories are short; this bounds the pathological ones. */
+export const AUDIT_LIMIT = 200;
+
+export async function loadAuditEntries(
+  metaSchema: InstanceSchema,
+  objectTypeId: string,
+  targetId: string,
+  limit: number = AUDIT_LIMIT,
+): Promise<AuditEntry[]> {
+  const rows = await db
+    .withSchema(metaSchema)
+    .selectFrom("audit_log")
+    // action_type_id is NOT NULL with a foreign key, so an action cannot be
+    // deleted while a log row cites it and this join always finds its row.
+    .innerJoin("action_type", "action_type.id", "audit_log.action_type_id")
+    // Selected unaliased, then shaped below: aliasing a column declared as a
+    // ColumnType hands back the wrapper rather than the type a read produces.
+    .select([
+      "audit_log.action_api_name",
+      "action_type.name",
+      "audit_log.actor",
+      "audit_log.params",
+      "audit_log.result",
+      "audit_log.created_at",
+    ])
+    .where("audit_log.target_type_id", "=", objectTypeId)
+    .where("audit_log.target_id", "=", targetId)
+    .orderBy("audit_log.created_at", "desc")
+    .limit(limit)
+    .execute();
+
+  return rows.map((row) => ({
+    action: row.action_api_name,
+    actionName: row.name,
+    actor: row.actor,
+    params: row.params,
+    result: row.result,
+    createdAt: row.created_at,
+  }));
+}
+
 // ------------------------------------------------------------- cardinality
 
 const INVERSE_CARDINALITY: Record<Cardinality, Cardinality> = {
