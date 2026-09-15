@@ -2,7 +2,7 @@ import { Button, Tooltip } from "@blueprintjs/core";
 import type { IconName } from "@blueprintjs/core";
 
 /** 이 셸이 보여줄 수 있는 앱들. */
-export type AppId = "ontology-manager" | "object-explorer";
+export type AppId = "ontology-manager" | "object-explorer" | "batch-workspace";
 
 type AppEntry = {
   id: AppId;
@@ -13,6 +13,7 @@ type AppEntry = {
 export const APPS: readonly AppEntry[] = [
   { id: "ontology-manager", label: "Ontology Manager", icon: "cube" },
   { id: "object-explorer", label: "Object Explorer", icon: "search-template" },
+  { id: "batch-workspace", label: "Batch Investigation Workspace", icon: "lab-test" },
 ];
 
 type AppSidebarProps = {

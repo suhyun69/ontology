@@ -3,6 +3,7 @@ import { listObjectTypes } from "./api.ts";
 import type { ObjectType, ObjectTypeSummary } from "./api.ts";
 import { AppSidebar } from "./AppSidebar.tsx";
 import type { AppId } from "./AppSidebar.tsx";
+import { BatchWorkspace } from "./BatchWorkspace.tsx";
 import { ObjectExplorer } from "./ObjectExplorer.tsx";
 import { OntologyManager } from "./OntologyManager.tsx";
 
@@ -53,8 +54,10 @@ export function App() {
             loadError={loadError}
             onObjectTypeSaved={handleObjectTypeSaved}
           />
-        ) : (
+        ) : app === "object-explorer" ? (
           <ObjectExplorer types={types} loadError={loadError} />
+        ) : (
+          <BatchWorkspace loadError={loadError} />
         )}
       </div>
     </div>
