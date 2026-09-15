@@ -1,3 +1,8 @@
+// First, and deliberately so: importing this installs the COURSE_NOW clock
+// override, and every module below it should already be reading that clock.
+// Keep it above the other imports.
+import "./clock.ts";
+
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { sql } from "kysely";
