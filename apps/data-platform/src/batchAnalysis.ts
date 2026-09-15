@@ -38,9 +38,13 @@ function round(value: number): number {
   return Math.round(value * 1e5) / 1e5;
 }
 
-type Sample = { day: number; gravity: number };
+export type Sample = { day: number; gravity: number };
 
 /** The curve's points, in day order. Keys that are not `day_<n>` are ignored. */
+export function curvePoints(curve: SugarCurve): Sample[] {
+  return samples(curve);
+}
+
 function samples(curve: SugarCurve): Sample[] {
   const points: Sample[] = [];
 
@@ -117,6 +121,69 @@ export function deviationFor(
     // Deliberately one-sided: a batch ahead of its curve is not behind on it.
     behind: delta >= SLIPPING_TOLERANCE,
   };
+}
+
+/**
+ * The curve points a given day is read from: the exact sample when it lands on
+ * one, otherwise the pair it sits between, or the nearest endpoint when it
+ * falls outside the sampled range.
+ *
+ * These are the points the target was actually derived from, which is what
+ * makes them worth pointing at in the UI.
+ */
+export function bracketingDays(curve: SugarCurve, day: number): Set<number> {
+  const points = samples(curve);
+  const first = points.at(0);
+  const last = points.at(-1);
+  if (first === undefined || last === undefined) return new Set();
+
+  if (day <= first.day) return new Set([first.day]);
+  if (day >= last.day) return new Set([last.day]);
+
+  let previous = first;
+  for (const point of points) {
+    if (point.day === day) return new Set([day]);
+    if (day < point.day) return new Set([previous.day, point.day]);
+    previous = point;
+  }
+
+  return new Set([last.day]);
+}
+
+/** The stretch a batch has been fermenting over. */
+export type Window = { from: Date; to: Date };
+
+/**
+ * When this batch has been in its tank.
+ *
+ * Anchored on the recorded start where there is one, since that is what the
+ * batch says about itself; the day count standing in for it otherwise.
+ */
+export function fermentationWindow(
+  plannedStart: string | null,
+  daysFermenting: number | null,
+  now: Date,
+): Window | null {
+  if (plannedStart !== null) {
+    const started = Date.parse(plannedStart);
+    if (!Number.isNaN(started)) return { from: new Date(started), to: now };
+  }
+
+  if (daysFermenting !== null) {
+    const from = new Date(now);
+    from.setDate(from.getDate() - daysFermenting);
+    return { from, to: now };
+  }
+
+  return null;
+}
+
+/** Whether a timestamp falls inside a window. An unparseable one does not. */
+export function withinWindow(stamp: unknown, window: Window | null): boolean {
+  if (window === null || typeof stamp !== "string") return false;
+
+  const at = Date.parse(stamp);
+  return !Number.isNaN(at) && at >= window.from.getTime() && at <= window.to.getTime();
 }
 
 /** Parses a numeric column, which the API sends as a string to keep precision. */

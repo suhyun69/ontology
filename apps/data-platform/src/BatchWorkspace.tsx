@@ -17,6 +17,7 @@ import {
 import type { Intent } from "@blueprintjs/core";
 import { listInstances } from "./api.ts";
 import type { Instance } from "./api.ts";
+import { BatchDetail } from "./BatchDetail.tsx";
 import { deviationFor, tanksServicedSince, toNumber } from "./batchAnalysis.ts";
 import type { Deviation, DeviationBand, SugarCurve } from "./batchAnalysis.ts";
 import { courseNow, courseNowAnchor, daysBeforeCourseNow } from "./courseNow.ts";
@@ -161,6 +162,7 @@ export function BatchWorkspace({ loadError }: BatchWorkspaceProps) {
     [rows, status, tank, behindOnly],
   );
 
+  const selectedRow = (rows ?? []).find((row) => row.id === selected);
   const shownError = loadError ?? error;
 
   if (shownError !== null) {
@@ -254,22 +256,21 @@ export function BatchWorkspace({ loadError }: BatchWorkspaceProps) {
           </SectionCard>
         </Section>
 
-        <Section title="Investigation" icon="search-template" compact>
-          <SectionCard>
-            {selected === null ? (
-              <span className={Classes.TEXT_MUTED}>
-                Select a batch to investigate. The detail panel lands next cycle.
-              </span>
-            ) : (
-              <>
-                <div className="bw-placeholder-title">{selected}</div>
-                <span className={Classes.TEXT_MUTED}>
-                  Selected. The detail panel lands next cycle.
-                </span>
-              </>
-            )}
-          </SectionCard>
-        </Section>
+        <div className="bw-investigation">
+          {selectedRow === undefined ? (
+            <Section title="Investigation" icon="search-template" compact>
+              <SectionCard>
+                <span className={Classes.TEXT_MUTED}>Select a batch to investigate.</span>
+              </SectionCard>
+            </Section>
+          ) : (
+            <BatchDetail
+              key={selectedRow.id}
+              batchId={selectedRow.id}
+              tankId={selectedRow.tankId}
+            />
+          )}
+        </div>
       </div>
     </Shell>
   );
