@@ -163,3 +163,7 @@ Add COURSE_NOW=2026-04-30T09:00:00Z to the root .env. Then create a small TypeSc
 """
 POST to localhost:3456/api/objects/batch/B-2130/actions/deferStart with newPlannedStart set to 2026-05-03T09:00:00Z
 """
+
+"""
+run pnpm run-sql seeds/01-manufacturing-foundation.sql to reset the data
+"""
