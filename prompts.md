@@ -181,3 +181,15 @@ Date windows compute against COURSE_NOW, injected in the frontend environment.
 
 Match the visual style of the other pages.
 """
+
+"""
+Add a route: GET /api/objects/:type/:id/audit. Return entries from the `audit_log` meta table for that object, newest-first. Return the action name, the actor, params, result, and timestamp.
+
+Then build the detail panel for the selected batch. Fetch the batch (with resolved links), the tank's maintenance logs via the list route, and audit entries in parallel. Collapsible sections:
+
+- Batch: sugar level, temperature, days fermenting, planned start, last operator note.
+- Recipe: name, fermentation days, sensitivity notes. Highlight the target sugar curve value at the batch's current day.
+- Tank + Maintenance: tank name and status, maintenance history. Flag any maintenance that falls within the batch's fermentation window with a Warning tag.
+- Quality Tests: from the batch's inbound links. Show pH, sugar level, lab notes, tester, date.
+- Audit: expandable rows: action, actor, params, timestamp.
+"""
