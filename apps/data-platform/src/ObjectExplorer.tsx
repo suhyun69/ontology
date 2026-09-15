@@ -31,6 +31,9 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
   const [meta, setMeta] = useState<Record<string, TypeDetail>>({});
   // 이미 가져왔거나 요청 중인 타입들 — 캐시 미스가 나도 한 번만 요청되게.
   const requested = useRef<Set<string>>(new Set());
+  // 액션이 지금 보여주는 인스턴스를 바꾼 뒤, 스택은 그대로 둔 채 현재 뷰만
+  // 다시 가져오고 싶을 때 이 값을 올린다.
+  const [reloadToken, setReloadToken] = useState(0);
 
   const view = stack[stack.length - 1];
 
@@ -54,6 +57,15 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     }
   }, [types]);
 
+  // 다른 뷰로 이동하면 화면에 있던 걸 지운다 — 그래야 새 제목 밑에 옛날
+  // 행이 보이는 일이 없다. reload는 일부러 이렇게 하지 않는다: 제자리에서
+  // 갱신해서, 새 데이터가 도착하는 동안 detail과 그 위에 열린 다이얼로그가
+  // 계속 마운트된 상태로 남아있게 한다.
+  useEffect(() => {
+    setPage(null);
+    setDetail(null);
+  }, [view]);
+
   // 스택 맨 위가 보여주는 걸 가져온다.
   useEffect(() => {
     if (view === undefined) return;
@@ -63,7 +75,6 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     requestMeta(view.type);
 
     if (view.kind === "list") {
-      setPage(null);
       listInstances(view.type)
         .then((loaded) => {
           if (!cancelled) setPage(loaded);
@@ -72,7 +83,6 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
           if (!cancelled) setViewError(errorMessage(error));
         });
     } else {
-      setDetail(null);
       loadInstance(view.type, view.id)
         .then((loaded) => {
           if (!cancelled) setDetail(loaded);
@@ -85,7 +95,7 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     return () => {
       cancelled = true;
     };
-  }, [view, requestMeta]);
+  }, [view, requestMeta, reloadToken]);
 
   // 링크의 타겟들은 지금 보고 있는 타입이 아니라 타겟 타입 자신의 메타데이터로
   // 라벨링되고 주소가 결정된다.
@@ -163,6 +173,7 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
               detail={detail}
               linkMeta={meta}
               onOpen={(type, id) => push({ kind: "detail", type, id })}
+              onActionCompleted={() => setReloadToken((token) => token + 1)}
             />
           )}
         </main>

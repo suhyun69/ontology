@@ -435,6 +435,14 @@ body {
   color: var(--bp-typography-color-muted);
 }
 
+/* A result or a validation dump inside a callout, already boxed by it. */
+.ox-result {
+  margin-top: var(--om-space-2);
+  background: none;
+  padding: 0;
+  max-height: 260px;
+}
+
 .ox-link-empty,
 .ox-empty-panel {
   padding: var(--om-space-2);

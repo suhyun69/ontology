@@ -8,7 +8,9 @@ import {
   Tag,
   Tooltip,
 } from "@blueprintjs/core";
-import type { Instance, InstanceDetail, ResolvedLink, TypeDetail } from "./api.ts";
+import { useState } from "react";
+import type { ActionType, Instance, InstanceDetail, ResolvedLink, TypeDetail } from "./api.ts";
+import { ActionDialog } from "./ActionDialog.tsx";
 import { Empty, formatValue, instanceId, instanceLabel, titleProperty } from "./format.tsx";
 
 type ObjectDetailProps = {
@@ -17,9 +19,18 @@ type ObjectDetailProps = {
   /** 이 인스턴스가 링크로 가리키는 타입들의 메타데이터, api_name으로 키를 잡음. */
   linkMeta: Record<string, TypeDetail>;
   onOpen: (type: string, id: string) => void;
+  /** Refetches this instance, once an action has changed it. */
+  onActionCompleted: () => void;
 };
 
-export function ObjectDetail({ meta, detail, linkMeta, onOpen }: ObjectDetailProps) {
+export function ObjectDetail({
+  meta,
+  detail,
+  linkMeta,
+  onOpen,
+  onActionCompleted,
+}: ObjectDetailProps) {
+  const [running, setRunning] = useState<ActionType | null>(null);
   if (meta === undefined || detail === null) {
     return <NonIdealState icon={<Spinner />} title="Loading object…" />;
   }
@@ -41,8 +52,18 @@ export function ObjectDetail({ meta, detail, linkMeta, onOpen }: ObjectDetailPro
           </Tag>
         </div>
 
-        <ActionStrip actions={meta.actions} />
+        <ActionStrip actions={meta.actions} onRun={setRunning} />
       </header>
+
+      {running !== null && (
+        <ActionDialog
+          action={running}
+          objectType={detail.type}
+          objectId={String(detail.id)}
+          onClose={() => setRunning(null)}
+          onCompleted={onActionCompleted}
+        />
+      )}
 
       <div className="ox-columns">
         <Section title="Properties" icon="properties" compact>
@@ -70,13 +91,14 @@ export function ObjectDetail({ meta, detail, linkMeta, onOpen }: ObjectDetailPro
 
 // ---------------------------------------------------------- 액션 스트립
 
-/**
- * 타입이 선언한 액션마다 버튼 하나씩.
- *
- * 아직 아무것도 연결 안 돼 있어서 클릭 핸들러가 없다 — 이 스트립은
- * "이 타입에 어떤 액션이 있는지"를 보여주는 용도까지만.
- */
-function ActionStrip({ actions }: { actions: TypeDetail["actions"] }) {
+/** 타입이 선언한 액션마다 버튼 하나씩; 클릭하면 그 액션의 다이얼로그가 열린다. */
+function ActionStrip({
+  actions,
+  onRun,
+}: {
+  actions: TypeDetail["actions"];
+  onRun: (action: ActionType) => void;
+}) {
   if (actions.length === 0) {
     return <span className={`ox-no-actions ${Classes.TEXT_MUTED}`}>No actions on this type</span>;
   }
@@ -85,10 +107,10 @@ function ActionStrip({ actions }: { actions: TypeDetail["actions"] }) {
     <div className="ox-actions">
       {actions.map((action) =>
         action.description === null ? (
-          <Button key={action.id} variant="outlined" text={action.name} />
+          <Button key={action.id} variant="outlined" text={action.name} onClick={() => onRun(action)} />
         ) : (
           <Tooltip key={action.id} content={action.description} placement="bottom" compact>
-            <Button variant="outlined" text={action.name} />
+            <Button variant="outlined" text={action.name} onClick={() => onRun(action)} />
           </Tooltip>
         ),
       )}
