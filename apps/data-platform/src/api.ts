@@ -70,6 +70,42 @@ export type ObjectTypeUpdate = {
   description?: string | null;
 };
 
+// ------------------------------------------------------------- instances
+
+/** An instance row, keyed by property api_name. Values are whatever the column holds. */
+export type Instance = Record<string, unknown>;
+
+export type InstancePage = {
+  type: string;
+  limit: number;
+  offset: number;
+  count: number;
+  instances: Instance[];
+};
+
+/**
+ * One link followed from an instance.
+ *
+ * `value` is an array when this end of the link is plural, a single instance
+ * when it is not, and null when the foreign key is unset -- the server has
+ * already applied the cardinality, so nothing here has to guess.
+ */
+export type ResolvedLink = {
+  name: string;
+  direction: "outbound" | "inbound";
+  cardinality: string;
+  targetType: string;
+  value: Instance | Instance[] | null;
+};
+
+export type InstanceDetail = {
+  type: string;
+  id: unknown;
+  properties: Instance;
+  /** Keyed by the link's api_name, as seen from this instance. */
+  links: Record<string, ResolvedLink>;
+};
+
 /**
  * Calls the API, turning a non-2xx into a throw.
  *
@@ -98,6 +134,14 @@ export function listObjectTypes(): Promise<{ count: number; types: ObjectTypeSum
 
 export function loadObjectType(apiName: string): Promise<TypeDetail> {
   return request(`/api/objects/meta/types/${encodeURIComponent(apiName)}`);
+}
+
+export function listInstances(type: string): Promise<InstancePage> {
+  return request(`/api/objects/${encodeURIComponent(type)}`);
+}
+
+export function loadInstance(type: string, id: string): Promise<InstanceDetail> {
+  return request(`/api/objects/${encodeURIComponent(type)}/${encodeURIComponent(id)}`);
 }
 
 export function patchObjectType(

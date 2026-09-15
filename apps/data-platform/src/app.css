@@ -29,6 +29,31 @@ body {
   font-family: var(--bp-typography-family-default);
 }
 
+/* ------------------------------------------------------------ app shell */
+
+/* The app rail sits outside the apps, which each fill the rest themselves. */
+.ox-shell {
+  display: flex;
+  height: 100%;
+}
+
+.ox-app {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ox-app-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--om-space-2);
+  flex: 0 0 52px;
+  padding: var(--om-space-2) 0;
+  border-right: 1px solid var(--bp-surface-border-color-default);
+  background: var(--bp-palette-light-gray-4);
+}
+
 .om-root {
   display: flex;
   flex-direction: column;
@@ -209,4 +234,213 @@ body {
 
 .om-callout-hint {
   margin-bottom: 0;
+}
+
+/* ------------------------------------------------------ object explorer */
+
+.ox-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.ox-crumb {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.ox-crumb-sep {
+  margin: 0 var(--om-space-1);
+  color: var(--bp-typography-color-muted);
+}
+
+.ox-crumb-link {
+  cursor: pointer;
+}
+
+.ox-instance-table {
+  width: 100%;
+}
+
+.ox-instance-table th {
+  font-size: var(--bp-typography-size-body-small);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--bp-typography-color-muted);
+  white-space: nowrap;
+}
+
+.ox-title-cell {
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------- object detail */
+
+.ox-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--om-space-4);
+}
+
+.ox-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--om-space-3);
+}
+
+.ox-detail-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--om-space-2);
+}
+
+.ox-detail-heading h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.ox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--om-space-2);
+}
+
+.ox-no-actions {
+  font-size: var(--bp-typography-size-body-small);
+}
+
+/*
+ * Properties and links side by side, collapsing to one column when there is
+ * no room -- the property values (json blobs, long notes) need the width more
+ * than the split does.
+ */
+.ox-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--om-space-4);
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .ox-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --------------------------------------------------------- property list */
+
+.ox-properties {
+  margin: 0;
+}
+
+.ox-property {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(0, 2fr);
+  gap: var(--om-space-3);
+  padding: var(--om-space-2) var(--om-space-3);
+  border-bottom: 1px solid var(--bp-surface-border-color-default);
+}
+
+.ox-property:last-child {
+  border-bottom: none;
+}
+
+.ox-property dt {
+  color: var(--bp-typography-color-muted);
+  font-size: var(--bp-typography-size-body-small);
+}
+
+.ox-property dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ox-tag-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--om-space-1);
+}
+
+.ox-json {
+  margin: 0;
+  padding: var(--om-space-2);
+  border-radius: var(--bp-surface-border-radius);
+  background: var(--bp-palette-light-gray-5);
+  font-family: var(--bp-typography-family-mono);
+  font-size: var(--bp-typography-size-body-small);
+  max-height: 220px;
+  overflow: auto;
+}
+
+/* ------------------------------------------------------------ link panel */
+
+.ox-links {
+  display: flex;
+  flex-direction: column;
+}
+
+.ox-link-group {
+  padding: var(--om-space-2) var(--om-space-3);
+  border-bottom: 1px solid var(--bp-surface-border-color-default);
+}
+
+.ox-link-group:last-child {
+  border-bottom: none;
+}
+
+.ox-link-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--om-space-2);
+  margin-bottom: var(--om-space-1);
+}
+
+.ox-link-name {
+  font-size: var(--bp-typography-size-body-small);
+  font-weight: 600;
+  color: var(--bp-typography-color-muted);
+}
+
+/* A link target is a button so it is reachable by keyboard, styled as a row. */
+.ox-link-target {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--om-space-2);
+  width: 100%;
+  padding: var(--om-space-1) var(--om-space-2);
+  border: none;
+  border-radius: var(--bp-surface-border-radius);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ox-link-target:hover {
+  background: var(--bp-surface-background-color-default-hover);
+}
+
+.ox-link-target-label {
+  color: var(--bp-typography-color-primary-rest);
+}
+
+.ox-link-target-pending {
+  cursor: default;
+  color: var(--bp-typography-color-muted);
+}
+
+.ox-link-empty,
+.ox-empty-panel {
+  padding: var(--om-space-2);
+}
+
+.ox-empty-panel {
+  padding: var(--om-space-4);
+  text-align: center;
 }
