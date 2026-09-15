@@ -105,3 +105,7 @@ The handler should:
 """
 Look at 01-manufacturing-foundation.sql and if necessary update our Kysely database interface types to align with it.
 """
+
+"""
+Create an apps/data-platform workspace. package.json with `type: module`, tsconfig.json extending the base and adding JSX + DOM libs. Install @blueprintjs/core, @blueprintjs/icons, react@18, react-dom@18, @types/react@18, @types/react-dom@18, @vitejs/plugin-react, vite. Scaffold the Vite entry point — index.html, vite.config.ts, main.tsx, App.tsx with a minimal React shell. Add a dev script.
+"""
