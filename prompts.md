@@ -159,3 +159,7 @@ Add a search bar above the instance list in the Object Explorer. When the user t
 """
 Add COURSE_NOW=2026-04-30T09:00:00Z to the root .env. Then create a small TypeScript module that overrides the global Date so the current time is anchored at COURSE_NOW when the server starts and advances normally from there. Date.now() and a bare new Date() should report that anchored time, while new Date(value) still parses normally. It must be active before any route handler runs.
 """
+
+"""
+POST to localhost:3456/api/objects/batch/B-2130/actions/deferStart with newPlannedStart set to 2026-05-03T09:00:00Z
+"""
