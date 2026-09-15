@@ -260,6 +260,36 @@ body {
   cursor: pointer;
 }
 
+/* ------------------------------------------------------------- list view */
+
+.ox-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--om-space-3);
+}
+
+.ox-search {
+  display: flex;
+  align-items: center;
+  gap: var(--om-space-4);
+}
+
+.ox-search-input {
+  flex: 1;
+  min-width: 0;
+  max-width: 560px;
+}
+
+/* Blueprint gives an inline Switch a bottom margin meant for stacked forms. */
+.ox-search-toggle {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.ox-result-count {
+  font-size: var(--bp-typography-size-body-small);
+}
+
 .ox-instance-table {
   width: 100%;
 }

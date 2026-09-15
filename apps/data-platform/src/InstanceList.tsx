@@ -1,10 +1,11 @@
 import { Classes, HTMLTable, NonIdealState, Spinner, Tag } from "@blueprintjs/core";
-import type { Instance, InstancePage, TypeDetail } from "./api.ts";
+import type { Instance, TypeDetail } from "./api.ts";
 import { Empty, formatValue, instanceId, primaryKeyProperty, statusProperty, titleProperty } from "./format.tsx";
 
 type InstanceListProps = {
   meta: TypeDetail | undefined;
-  page: InstancePage | null;
+  /** Already filtered by the caller; null while still loading. */
+  instances: readonly Instance[] | null;
   onOpen: (id: string) => void;
 };
 
@@ -16,8 +17,8 @@ type InstanceListProps = {
  * is_title, the id column appears only when that is not already the title, and
  * status only when the type declares one.
  */
-export function InstanceList({ meta, page, onOpen }: InstanceListProps) {
-  if (meta === undefined || page === null) {
+export function InstanceList({ meta, instances, onOpen }: InstanceListProps) {
+  if (meta === undefined || instances === null) {
     return <NonIdealState icon={<Spinner />} title="Loading instances…" />;
   }
 
@@ -26,7 +27,7 @@ export function InstanceList({ meta, page, onOpen }: InstanceListProps) {
   const status = statusProperty(meta);
   const showId = key !== undefined && key.api_name !== title?.api_name;
 
-  if (page.instances.length === 0) {
+  if (instances.length === 0) {
     return (
       <NonIdealState
         icon="inbox"
@@ -46,7 +47,7 @@ export function InstanceList({ meta, page, onOpen }: InstanceListProps) {
         </tr>
       </thead>
       <tbody>
-        {page.instances.map((instance, index) => (
+        {instances.map((instance, index) => (
           <InstanceRow
             key={instanceId(instance, meta) ?? index}
             instance={instance}

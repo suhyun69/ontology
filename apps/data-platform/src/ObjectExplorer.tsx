@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alignment, Button, Callout, Icon, Navbar, NonIdealState, Tag } from "@blueprintjs/core";
 import { listInstances, loadInstance, loadObjectType } from "./api.ts";
 import type { InstanceDetail, InstancePage, ObjectTypeSummary, TypeDetail } from "./api.ts";
-import { InstanceList } from "./InstanceList.tsx";
+import { ListView } from "./ListView.tsx";
 import { ObjectDetail } from "./ObjectDetail.tsx";
 import { TypeRail } from "./TypeRail.tsx";
 
@@ -31,6 +31,14 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
   const [meta, setMeta] = useState<Record<string, TypeDetail>>({});
   // Types already fetched or in flight, so a cache miss is requested once.
   const requested = useRef<Set<string>>(new Set());
+
+  // Search state lives here rather than in the list, so a query survives a
+  // step into an object and back out again.
+  const [query, setQuery] = useState("");
+  const [searchAllTypes, setSearchAllTypes] = useState(false);
+  // Instances per type, filled in only for a search that spans all of them.
+  const [allPages, setAllPages] = useState<Record<string, InstancePage>>({});
+  const requestedInstances = useRef<Set<string>>(new Set());
   // Bumped to refetch the current view without moving on the stack, after an
   // action has changed the instance being shown.
   const [reloadToken, setReloadToken] = useState(0);
@@ -48,6 +56,29 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
         requested.current.delete(type);
       });
   }, []);
+
+  const requestInstances = useCallback((type: string) => {
+    if (requestedInstances.current.has(type)) return;
+    requestedInstances.current.add(type);
+
+    listInstances(type)
+      .then((loaded) => setAllPages((current) => ({ ...current, [type]: loaded })))
+      .catch(() => {
+        requestedInstances.current.delete(type);
+      });
+  }, []);
+
+  // A search across every type needs every type's rows and metadata. They are
+  // fetched only once the toggle is on, so the common case still costs one
+  // request for the type being looked at.
+  useEffect(() => {
+    if (!searchAllTypes) return;
+
+    for (const type of types) {
+      requestMeta(type.api_name);
+      requestInstances(type.api_name);
+    }
+  }, [searchAllTypes, types, requestMeta, requestInstances]);
 
   // Land on the first type rather than an empty pane.
   useEffect(() => {
@@ -162,10 +193,17 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
           ) : view === undefined ? (
             <NonIdealState icon="search-template" title="Pick an object type" />
           ) : view.kind === "list" ? (
-            <InstanceList
-              meta={meta[view.type]}
-              page={page}
-              onOpen={(id) => push({ kind: "detail", type: view.type, id })}
+            <ListView
+              types={types}
+              selectedType={view.type}
+              meta={meta}
+              instances={page?.instances ?? null}
+              allPages={allPages}
+              query={query}
+              onQueryChange={setQuery}
+              searchAllTypes={searchAllTypes}
+              onSearchAllTypesChange={setSearchAllTypes}
+              onOpen={(type, id) => push({ kind: "detail", type, id })}
             />
           ) : (
             <ObjectDetail
