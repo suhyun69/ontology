@@ -1,0 +1,212 @@
+/*
+ * Layout only. Colours and type come from Blueprint 6's design tokens (the
+ * --bp-* custom properties in blueprint-design-tokens.css), so this stays in
+ * step with the component styles instead of restating them as hard-coded hex.
+ *
+ * Blueprint 6 ships no spacing scale, so the one below is ours -- an 8px grid
+ * matching the rhythm its own components use.
+ */
+
+:root {
+  --om-space-1: 4px;
+  --om-space-2: 8px;
+  --om-space-3: 12px;
+  --om-space-4: 16px;
+  --om-space-5: 24px;
+  --om-rail-width: 264px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bp-palette-white);
+  color: var(--bp-typography-color-default-rest);
+  font-family: var(--bp-typography-family-default);
+}
+
+.om-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.om-brand {
+  font-weight: 600;
+}
+
+/* The navbar is fixed-height; everything below it shares the remaining space. */
+.om-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ------------------------------------------------------------- left rail */
+
+.om-rail {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 var(--om-rail-width);
+  width: var(--om-rail-width);
+  min-height: 0;
+  border-right: 1px solid var(--bp-surface-border-color-default);
+  background: var(--bp-palette-light-gray-5);
+}
+
+.om-rail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--om-space-2);
+  padding: var(--om-space-3) var(--om-space-4);
+  border-bottom: 1px solid var(--bp-surface-border-color-default);
+}
+
+.om-rail-title {
+  font-size: var(--bp-typography-size-body-small);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bp-typography-color-muted);
+}
+
+.om-rail-menu {
+  flex: 1;
+  overflow-y: auto;
+  background: none;
+  padding: var(--om-space-2);
+}
+
+.om-rail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.om-rail-name {
+  font-weight: 500;
+}
+
+.om-rail-api {
+  font-family: var(--bp-typography-family-mono);
+  font-size: var(--bp-typography-size-body-small);
+}
+
+/* ---------------------------------------------------------- main content */
+
+.om-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--om-space-5);
+}
+
+.om-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--om-space-4);
+  max-width: 1100px;
+}
+
+.om-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--om-space-3);
+}
+
+.om-header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--om-space-3);
+}
+
+/* The editable name should read as the page title until it is clicked. */
+.om-header-title h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+  flex: 1;
+  min-width: 0;
+}
+
+.om-header-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--om-space-2);
+}
+
+.om-description {
+  max-width: 70ch;
+  color: var(--bp-typography-color-muted);
+}
+
+/* Nothing else marks these two as editable, so outline them on hover. */
+.om-header-title .bp6-editable-text:hover::before,
+.om-description .bp6-editable-text:hover::before {
+  box-shadow: 0 0 0 1px var(--bp-surface-border-color-strong);
+}
+
+/* --------------------------------------------------------------- tables */
+
+.om-table {
+  width: 100%;
+}
+
+.om-table th {
+  font-size: var(--bp-typography-size-body-small);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--bp-typography-color-muted);
+  white-space: nowrap;
+}
+
+.om-table td {
+  vertical-align: middle;
+}
+
+.om-mono {
+  font-family: var(--bp-typography-family-mono);
+  font-size: var(--bp-typography-size-body-small);
+}
+
+.om-empty {
+  text-align: center;
+  padding: var(--om-space-4) !important;
+}
+
+.om-key-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--om-space-1);
+}
+
+/* One link, read left to right: this type, how many, the type at the far end. */
+.om-relationship {
+  white-space: nowrap;
+}
+
+.om-relationship > * {
+  margin-right: var(--om-space-2);
+  vertical-align: middle;
+}
+
+.om-relationship > *:last-child {
+  margin-right: 0;
+}
+
+.om-type-link {
+  font-family: var(--bp-typography-family-mono);
+  font-size: var(--bp-typography-size-body-small);
+  cursor: pointer;
+}
+
+.om-callout-hint {
+  margin-bottom: 0;
+}
