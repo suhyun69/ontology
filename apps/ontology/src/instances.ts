@@ -45,6 +45,20 @@ export async function selectInstances(
 }
 
 /**
+ * How many instances of a type exist.
+ *
+ * count(*) is a bigint, which node-postgres hands back as a string rather than
+ * risk a lossy float64, so the digits are parsed here instead of at the caller.
+ */
+export async function countInstances(objectType: ObjectTypeRow): Promise<number> {
+  const { rows } = await sql<{ count: string }>`
+    select count(*) as count from ${instanceTable(objectType)}
+  `.execute(db);
+
+  return Number(rows[0]?.count ?? 0);
+}
+
+/**
  * Re-keys a raw row by property api_name.
  *
  * A write returning `returningAll()` comes back in the table's own snake_case,

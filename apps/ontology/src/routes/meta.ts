@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { HttpError } from "../errors.ts";
+import { countInstances } from "../instances.ts";
 import {
   findObjectType,
   inverseCardinality,
@@ -10,19 +11,28 @@ import {
   loadProperties,
   objectTypeById,
   propertyById,
+  requireObjectType,
+  updateObjectType,
 } from "../metadata.ts";
-import type { LinkRow, TypeLookup } from "../metadata.ts";
+import type { LinkRow, ObjectTypeUpdate, TypeLookup } from "../metadata.ts";
 
 export const metaRoutes = new Hono();
 
 // ------------------------------------------ GET /api/objects/meta/types
 
+// instanceCount rides along with the list because the only thing that wants a
+// type list generally wants to say how big each one is, and counting eight
+// tables here beats eight round trips from the client.
 metaRoutes.get("/types", async (c) => {
   const types = await listObjectTypes();
-  return c.json({
-    count: types.length,
-    types: types.map(({ objectType }) => objectType),
-  });
+  const summaries = await Promise.all(
+    types.map(async ({ objectType }) => ({
+      ...objectType,
+      instanceCount: await countInstances(objectType),
+    })),
+  );
+
+  return c.json({ count: summaries.length, types: summaries });
 });
 
 // ------------------------------------ GET /api/objects/meta/types/:type
@@ -83,4 +93,71 @@ metaRoutes.get("/types/:type", async (c) => {
     links,
     actions,
   });
+});
+
+// ---------------------------------- PATCH /api/objects/meta/types/:type
+
+/**
+ * Reads an update off the request body.
+ *
+ * Unknown keys are refused rather than dropped: a client sending `api_name`
+ * expects the type to be renamed, and silently ignoring it would report success
+ * for something that did not happen.
+ */
+function parseObjectTypeUpdate(body: unknown): ObjectTypeUpdate {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    throw new HttpError(400, "body must be a JSON object");
+  }
+
+  const fields = body as Record<string, unknown>;
+  const unknown = Object.keys(fields).filter((key) => key !== "name" && key !== "description");
+  if (unknown.length > 0) {
+    throw new HttpError(
+      400,
+      `not editable: ${unknown.join(", ")}. Editable fields: name, description`,
+    );
+  }
+
+  const update: ObjectTypeUpdate = {};
+
+  if ("name" in fields) {
+    const name = fields["name"];
+    if (typeof name !== "string" || name.trim() === "") {
+      throw new HttpError(400, "name must be a non-empty string");
+    }
+    update.name = name.trim();
+  }
+
+  if ("description" in fields) {
+    const description = fields["description"];
+    if (description !== null && typeof description !== "string") {
+      throw new HttpError(400, "description must be a string or null");
+    }
+    // The column is nullable and an emptied editor means "no description", so
+    // blank text is stored as NULL rather than as an empty string.
+    update.description =
+      description === null || description.trim() === "" ? null : description.trim();
+  }
+
+  if (Object.keys(update).length === 0) {
+    throw new HttpError(400, "nothing to update: provide name and/or description");
+  }
+
+  return update;
+}
+
+metaRoutes.patch("/types/:type", async (c) => {
+  const { metaSchema, objectType } = await requireObjectType(c.req.param("type"));
+
+  const body = await c.req.json().catch(() => {
+    throw new HttpError(400, "body must be valid JSON");
+  });
+
+  const updated = await updateObjectType(
+    metaSchema,
+    objectType.id,
+    parseObjectTypeUpdate(body),
+  );
+
+  return c.json({ objectType: updated });
 });

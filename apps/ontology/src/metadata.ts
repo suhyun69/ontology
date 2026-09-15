@@ -130,6 +130,33 @@ export async function requireObjectType(apiName: string): Promise<TypeLookup> {
   return lookup;
 }
 
+/**
+ * The object_type columns a client may edit.
+ *
+ * Deliberately just the two display fields. api_name is the handle clients
+ * address the type by, and schema/datasource_table decide which rows the type
+ * reads -- changing any of them through a metadata edit would break live
+ * callers or point the type at another table, so they are not offered here.
+ */
+export type ObjectTypeUpdate = {
+  name?: string;
+  description?: string | null;
+};
+
+export async function updateObjectType(
+  metaSchema: InstanceSchema,
+  id: string,
+  update: ObjectTypeUpdate,
+): Promise<ObjectTypeRow> {
+  return await db
+    .withSchema(metaSchema)
+    .updateTable("object_type")
+    .set(update)
+    .where("id", "=", id)
+    .returningAll()
+    .executeTakeFirstOrThrow();
+}
+
 /** Resolves a link's endpoint, which metadata stores by id rather than api_name. */
 export async function objectTypeById(
   metaSchema: InstanceSchema,
