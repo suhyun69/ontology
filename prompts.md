@@ -147,3 +147,11 @@ Wire up the action buttons in the Object Explorer detail view. When an action bu
 Required fields are marked. Submit sends a POST to `/api/objects/:type/:id/actions/:actionName` with the form values. Show the result and refresh the detail view. Make sure the request body format matches the one expected by the action handler's logic.
 """
 
+"""
+Add a search bar above the instance list in the Object Explorer. When the user types a query:
+
+1. Filter instances of the selected type by checking if any property value contains the search string.
+2. Read property metadata to know which properties to search (skip booleans).
+3. Filter the instance list in real-time.
+4. Optional toggle: "search all types" — search across all object types, show results grouped by type.
+"""
