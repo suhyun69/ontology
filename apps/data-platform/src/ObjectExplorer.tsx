@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alignment, Button, Callout, Icon, Navbar, NonIdealState, Tag } from "@blueprintjs/core";
 import { listInstances, loadInstance, loadObjectType } from "./api.ts";
 import type { InstanceDetail, InstancePage, ObjectTypeSummary, TypeDetail } from "./api.ts";
-import { InstanceList } from "./InstanceList.tsx";
+import { ListView } from "./ListView.tsx";
 import { ObjectDetail } from "./ObjectDetail.tsx";
 import { TypeRail } from "./TypeRail.tsx";
 
@@ -31,6 +31,14 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
   const [meta, setMeta] = useState<Record<string, TypeDetail>>({});
   // 이미 가져왔거나 요청 중인 타입들 — 캐시 미스가 나도 한 번만 요청되게.
   const requested = useRef<Set<string>>(new Set());
+
+  // 검색 상태는 리스트가 아니라 여기(explorer)에 둔다 — 그래야 객체 하나로
+  // 들어갔다 나와도 검색어가 그대로 남아있다.
+  const [query, setQuery] = useState("");
+  const [searchAllTypes, setSearchAllTypes] = useState(false);
+  // 타입별 인스턴스 — 전체 타입을 가로지르는 검색일 때만 채워진다.
+  const [allPages, setAllPages] = useState<Record<string, InstancePage>>({});
+  const requestedInstances = useRef<Set<string>>(new Set());
   // 액션이 지금 보여주는 인스턴스를 바꾼 뒤, 스택은 그대로 둔 채 현재 뷰만
   // 다시 가져오고 싶을 때 이 값을 올린다.
   const [reloadToken, setReloadToken] = useState(0);
@@ -48,6 +56,29 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
         requested.current.delete(type);
       });
   }, []);
+
+  const requestInstances = useCallback((type: string) => {
+    if (requestedInstances.current.has(type)) return;
+    requestedInstances.current.add(type);
+
+    listInstances(type)
+      .then((loaded) => setAllPages((current) => ({ ...current, [type]: loaded })))
+      .catch(() => {
+        requestedInstances.current.delete(type);
+      });
+  }, []);
+
+  // 전체 타입을 가로지르는 검색은 모든 타입의 행과 메타데이터가 필요하다.
+  // 토글이 켜졌을 때만 가져오므로, 평소 케이스는 여전히 지금 보고 있는 타입
+  // 하나만 요청하는 비용으로 끝난다.
+  useEffect(() => {
+    if (!searchAllTypes) return;
+
+    for (const type of types) {
+      requestMeta(type.api_name);
+      requestInstances(type.api_name);
+    }
+  }, [searchAllTypes, types, requestMeta, requestInstances]);
 
   // 빈 패널 대신 첫 번째 타입으로 바로 진입.
   useEffect(() => {
@@ -162,10 +193,17 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
           ) : view === undefined ? (
             <NonIdealState icon="search-template" title="Pick an object type" />
           ) : view.kind === "list" ? (
-            <InstanceList
-              meta={meta[view.type]}
-              page={page}
-              onOpen={(id) => push({ kind: "detail", type: view.type, id })}
+            <ListView
+              types={types}
+              selectedType={view.type}
+              meta={meta}
+              instances={page?.instances ?? null}
+              allPages={allPages}
+              query={query}
+              onQueryChange={setQuery}
+              searchAllTypes={searchAllTypes}
+              onSearchAllTypesChange={setSearchAllTypes}
+              onOpen={(type, id) => push({ kind: "detail", type, id })}
             />
           ) : (
             <ObjectDetail
