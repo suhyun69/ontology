@@ -31,6 +31,9 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
   const [meta, setMeta] = useState<Record<string, TypeDetail>>({});
   // Types already fetched or in flight, so a cache miss is requested once.
   const requested = useRef<Set<string>>(new Set());
+  // Bumped to refetch the current view without moving on the stack, after an
+  // action has changed the instance being shown.
+  const [reloadToken, setReloadToken] = useState(0);
 
   const view = stack[stack.length - 1];
 
@@ -54,6 +57,15 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     }
   }, [types]);
 
+  // Moving to another view drops what was on screen, so the old rows are never
+  // shown under the new heading. A reload deliberately does not do this: it
+  // refreshes in place, leaving the detail -- and any dialog open over it --
+  // mounted while the new data arrives.
+  useEffect(() => {
+    setPage(null);
+    setDetail(null);
+  }, [view]);
+
   // Fetch whatever the top of the stack is showing.
   useEffect(() => {
     if (view === undefined) return;
@@ -63,7 +75,6 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     requestMeta(view.type);
 
     if (view.kind === "list") {
-      setPage(null);
       listInstances(view.type)
         .then((loaded) => {
           if (!cancelled) setPage(loaded);
@@ -72,7 +83,6 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
           if (!cancelled) setViewError(errorMessage(error));
         });
     } else {
-      setDetail(null);
       loadInstance(view.type, view.id)
         .then((loaded) => {
           if (!cancelled) setDetail(loaded);
@@ -85,7 +95,7 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     return () => {
       cancelled = true;
     };
-  }, [view, requestMeta]);
+  }, [view, requestMeta, reloadToken]);
 
   // A link's targets are labelled and addressed by the target type's own
   // metadata, which is a different type from the one being shown.
@@ -163,6 +173,7 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
               detail={detail}
               linkMeta={meta}
               onOpen={(type, id) => push({ kind: "detail", type, id })}
+              onActionCompleted={() => setReloadToken((token) => token + 1)}
             />
           )}
         </main>

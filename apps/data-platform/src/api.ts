@@ -107,22 +107,39 @@ export type InstanceDetail = {
 };
 
 /**
+ * A failed call, carrying whatever machine-readable context came with it.
+ *
+ * The action route reports a schema mismatch as `details`: one entry per
+ * violated keyword, which says a good deal more than the summary message.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly details: unknown;
+
+  constructor(message: string, status: number, details: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.details = details;
+  }
+}
+
+/**
  * Calls the API, turning a non-2xx into a throw.
  *
- * The server reports failures as `{ error }` (see index.ts onError), so that
- * message is preferred over the bare status -- it is the one written for a
- * human to read.
+ * The server reports failures as `{ error, details? }` (see index.ts onError),
+ * so that message is preferred over the bare status -- it is the one written
+ * for a human to read.
  */
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init);
   const payload: unknown = await response.json().catch(() => null);
 
   if (!response.ok) {
+    const body = typeof payload === "object" && payload !== null ? (payload as Record<string, unknown>) : {};
     const message =
-      typeof payload === "object" && payload !== null && "error" in payload
-        ? String((payload as { error: unknown }).error)
-        : `${response.status} ${response.statusText}`;
-    throw new Error(message);
+      "error" in body ? String(body["error"]) : `${response.status} ${response.statusText}`;
+    throw new ApiError(message, response.status, body["details"] ?? null);
   }
 
   return payload as T;
@@ -142,6 +159,39 @@ export function listInstances(type: string): Promise<InstancePage> {
 
 export function loadInstance(type: string, id: string): Promise<InstanceDetail> {
   return request(`/api/objects/${encodeURIComponent(type)}/${encodeURIComponent(id)}`);
+}
+
+export type ActionResult = {
+  type: string;
+  id: unknown;
+  action: string;
+  result: unknown;
+};
+
+/**
+ * Runs an action against one instance.
+ *
+ * The body is the parameters themselves, flat -- the route parses the whole
+ * body as the parameter object and validates it against the action's
+ * parameter_schema, so anything wrapped around them would fail that check.
+ *
+ * x-actor is what the audit row records. There is no authentication yet and
+ * the route falls back to "anonymous", so naming the app at least says which
+ * surface a change came through.
+ */
+export function runAction(
+  type: string,
+  id: string,
+  actionName: string,
+  params: Record<string, unknown>,
+): Promise<ActionResult> {
+  const path = `/api/objects/${encodeURIComponent(type)}/${encodeURIComponent(id)}/actions/${encodeURIComponent(actionName)}`;
+
+  return request(path, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-actor": "object-explorer" },
+    body: JSON.stringify(params),
+  });
 }
 
 export function patchObjectType(
