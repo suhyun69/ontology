@@ -135,3 +135,15 @@ Object detail: fetch from `GET /api/objects/:type/:id` (returns properties + res
 Also add a thin left sidebar so we can switch between our apps, each with a different icon. Our first
 Ontology Manager gets a Cube icon. Use a search-template icon for this Object Explorer app.
 """
+
+"""
+Wire up the action buttons in the Object Explorer detail view. When an action button is clicked, open a Blueprint dialog. Read the action's `parameter_schema` (JSON Schema) and dynamically generate form fields:
+
+- `datetime` -> `DateInput`
+- `string` -> `InputGroup`
+- `enum` -> `HTMLSelect`
+- `number` -> `NumericInput`
+
+Required fields are marked. Submit sends a POST to `/api/objects/:type/:id/actions/:actionName` with the form values. Show the result and refresh the detail view. Make sure the request body format matches the one expected by the action handler's logic.
+"""
+
