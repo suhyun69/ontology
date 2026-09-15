@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Vite serves this to a browser, so the DOM exists and JSX compiles.
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "jsx": "react-jsx",
+
+    // vite/client declares the side-effect CSS and asset imports Vite resolves.
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
+}
