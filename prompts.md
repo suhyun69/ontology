@@ -155,3 +155,7 @@ Add a search bar above the instance list in the Object Explorer. When the user t
 3. Filter the instance list in real-time.
 4. Optional toggle: "search all types" — search across all object types, show results grouped by type.
 """
+
+"""
+Add COURSE_NOW=2026-04-30T09:00:00Z to the root .env. Then create a small TypeScript module that overrides the global Date so the current time is anchored at COURSE_NOW when the server starts and advances normally from there. Date.now() and a bare new Date() should report that anchored time, while new Date(value) still parses normally. It must be active before any route handler runs.
+"""
