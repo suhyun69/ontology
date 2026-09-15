@@ -119,3 +119,19 @@ For the links section, use a more straightforward approach to replace the intera
 
 Add an extra left rail that lists all object types, showing display name and instance count. Clicking selects a type.
 """
+
+"""
+Build an Object Explorer with two sub-views. We want it to look visually like the three attached screenshots. Use Blueprintjs components and CSS to accomplish this. Note that all of them are a little different in layout. In our case, you need to make a single one that is sensible for any object type.
+
+Left rail: same type list as the OM, but clicking navigates to the instance list for that type.
+
+Instance list: fetch from `GET /api/objects/:type`. Render a table. Main column: find the property where `is_title` is true in the type metadata and use that value. Show `status` as a secondary column. Clicking a row navigates to the object detail view.
+
+Object detail: fetch from `GET /api/objects/:type/:id` (returns properties + resolved links). Action strip across the top: a button per action from the type's action list (display name as label, description as tooltip). Don't wire up the click handlers yet, just render the buttons. Two-column layout below:
+
+- Left, Properties: list each property with its display name from metadata. Format values by `data_type`.
+- Right, Links: show resolved linked objects grouped by link name. Clicking navigates to that object's detail. Maintain a navigation stack so back works.
+
+Also add a thin left sidebar so we can switch between our apps, each with a different icon. Our first
+Ontology Manager gets a Cube icon. Use a search-template icon for this Object Explorer app.
+"""
