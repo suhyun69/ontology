@@ -12,6 +12,7 @@ export const openApiDocument = {
   tags: [
     { name: "meta", description: "The ontology itself: object types, properties, links, actions." },
     { name: "objects", description: "Instance data for a given object type." },
+    { name: "actions", description: "Invoking a declared action against one instance." },
   ],
   paths: {
     "/api/objects/meta/types": {
@@ -163,6 +164,83 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/objects/{type}/{id}/actions/{actionName}": {
+      post: {
+        tags: ["actions"],
+        summary: "Invoke a declared action against one instance",
+        operationId: "invokeAction",
+        parameters: [
+          { $ref: "#/components/parameters/TypeApiName" },
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "The instance's primary key value.",
+            schema: { type: "string" },
+          },
+          {
+            name: "actionName",
+            in: "path",
+            required: true,
+            description: "The action's api_name, e.g. deferStart.",
+            schema: { type: "string" },
+          },
+          {
+            name: "x-actor",
+            in: "header",
+            required: false,
+            description: "Who is invoking the action, recorded on the audit row. Defaults to \"anonymous\".",
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: false,
+          description:
+            "Validated against the action_type's parameter_schema (JSON Schema 2020-12). An empty " +
+            "body means no parameters.",
+          content: {
+            "application/json": {
+              schema: { type: "object", description: "Shape depends on the action; see GET .../meta/types/{type}." },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "The action ran. `result` is whatever the handler returns.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ActionInvocationResult" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/ActionValidationError" },
+          "404": {
+            description: "Unknown object type, no instance with that id, or the type has no such action.",
+            content: {
+              "application/json": {
+                schema: { type: "object", properties: { error: { type: "string" } } },
+              },
+            },
+          },
+          "409": {
+            description: "The instance is not in a state the action accepts (e.g. a batch that already started).",
+            content: {
+              "application/json": {
+                schema: { type: "object", properties: { error: { type: "string" } } },
+              },
+            },
+          },
+          "501": {
+            description: "The ontology declares this action, but no handler implements it yet.",
+            content: {
+              "application/json": {
+                schema: { type: "object", properties: { error: { type: "string" } } },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     parameters: {
@@ -188,6 +266,32 @@ export const openApiDocument = {
         content: {
           "application/json": {
             schema: { type: "object", properties: { error: { type: "string" } } },
+          },
+        },
+      },
+      ActionValidationError: {
+        description: "The body is not valid JSON, is not an object, or fails the action's parameter_schema.",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                error: { type: "string" },
+                details: {
+                  type: "array",
+                  description: "Present when the body failed JSON Schema validation; one entry per violation.",
+                  items: {
+                    type: "object",
+                    properties: {
+                      keyword: { type: "string" },
+                      instanceLocation: { type: "string" },
+                      error: { type: "string" },
+                    },
+                  },
+                },
+              },
+              required: ["error"],
+            },
           },
         },
       },
@@ -273,6 +377,16 @@ export const openApiDocument = {
       Cardinality: {
         type: "string",
         enum: ["one_to_one", "one_to_many", "many_to_one", "many_to_many"],
+      },
+      ActionInvocationResult: {
+        type: "object",
+        properties: {
+          type: { type: "string" },
+          id: {},
+          action: { type: "string" },
+          result: { description: "Whatever the handler returns, e.g. the updated instance." },
+        },
+        required: ["type", "id", "action", "result"],
       },
     },
   },
