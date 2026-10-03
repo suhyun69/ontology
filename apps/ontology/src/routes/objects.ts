@@ -3,7 +3,7 @@ import { sql } from "kysely";
 import type { RawBuilder } from "kysely";
 import type { Cardinality } from "../db.ts";
 import { HttpError } from "../errors.ts";
-import { DEFAULT_LIMIT, MAX_LIMIT, selectInstances } from "../instances.ts";
+import { DEFAULT_LIMIT, MAX_LIMIT, parsePositiveInteger, selectInstances } from "../instances.ts";
 import type { Instance } from "../instances.ts";
 import {
   columnRef,
@@ -31,14 +31,6 @@ type LinkView = {
 const PAGINATION_PARAMS = new Set(["limit", "offset"]);
 
 export const objectRoutes = new Hono();
-
-function parsePositiveInteger(raw: string, what: string, max: number): number {
-  const value = Number(raw);
-  if (!Number.isInteger(value) || value < 0 || value > max) {
-    throw new HttpError(400, `${what} must be an integer between 0 and ${max}, got ${JSON.stringify(raw)}`);
-  }
-  return value;
-}
 
 /**
  * Turns a query-string value into something comparable against the column.

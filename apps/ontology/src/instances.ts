@@ -1,6 +1,7 @@
 import { sql } from "kysely";
 import type { RawBuilder } from "kysely";
 import { db } from "./db.ts";
+import { HttpError } from "./errors.ts";
 import { columnRef, instanceTable, selectColumns } from "./metadata.ts";
 import type { ObjectTypeRow, PropertyRow } from "./metadata.ts";
 
@@ -9,6 +10,15 @@ export type Instance = Record<string, unknown>;
 
 export const DEFAULT_LIMIT = 100;
 export const MAX_LIMIT = 1000;
+
+/** Parses a `limit`/`offset` style query param; an out-of-range value is a 400, not a 500. */
+export function parsePositiveInteger(raw: string, what: string, max: number): number {
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0 || value > max) {
+    throw new HttpError(400, `${what} must be an integer between 0 and ${max}, got ${JSON.stringify(raw)}`);
+  }
+  return value;
+}
 
 /**
  * Reads instances of one type.

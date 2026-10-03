@@ -1,17 +1,23 @@
 import { Hono } from "hono";
 import { HttpError } from "../errors.ts";
+import { parsePositiveInteger } from "../instances.ts";
 import {
   findObjectType,
   inverseCardinality,
   listObjectTypes,
   loadActions,
+  loadAuditLog,
   loadInboundLinks,
   loadOutboundLinks,
   loadProperties,
   objectTypeById,
   propertyById,
+  requireObjectType,
 } from "../metadata.ts";
 import type { LinkRow, TypeLookup } from "../metadata.ts";
+
+const DEFAULT_LIMIT = 100;
+const MAX_LIMIT = 1000;
 
 export const metaRoutes = new Hono();
 
@@ -82,5 +88,53 @@ metaRoutes.get("/types/:type", async (c) => {
     properties,
     links,
     actions,
+  });
+});
+
+// --------------------------------------- GET /api/objects/meta/types/:type/actions
+
+metaRoutes.get("/types/:type/actions", async (c) => {
+  const { metaSchema, objectType } = await requireObjectType(c.req.param("type"));
+  const actions = await loadActions(metaSchema, objectType.id);
+  return c.json({
+    type: objectType.api_name,
+    count: actions.length,
+    actions,
+  });
+});
+
+// ----------------------------------------------------- GET /api/objects/meta/audit
+
+metaRoutes.get("/audit", async (c) => {
+  const query = c.req.query();
+  const limit =
+    query["limit"] === undefined ? DEFAULT_LIMIT : parsePositiveInteger(query["limit"], "limit", MAX_LIMIT);
+  const offset =
+    query["offset"] === undefined
+      ? 0
+      : parsePositiveInteger(query["offset"], "offset", Number.MAX_SAFE_INTEGER);
+
+  const targetTypeApiName = query["targetType"];
+  const targetId = query["targetId"];
+  // A bare targetId would silently match that id across every object type.
+  if (targetId !== undefined && targetTypeApiName === undefined) {
+    throw new HttpError(400, "targetId filter requires targetType");
+  }
+  // Not validated against the live object types: a log entry's target type
+  // can since have been renamed or dropped, and its history should still be
+  // queryable by the api_name recorded at the time (see audit_log in
+  // sql/manufacturing.sql).
+
+  const entries = await loadAuditLog({
+    ...(targetTypeApiName !== undefined ? { targetTypeApiName } : {}),
+    ...(targetId !== undefined ? { targetId } : {}),
+    limit,
+    offset,
+  });
+  return c.json({
+    count: entries.length,
+    limit,
+    offset,
+    entries,
   });
 });

@@ -3,6 +3,7 @@ import type { RawBuilder, Selectable } from "kysely";
 import { db, INSTANCE_SCHEMAS, isInstanceSchema } from "./db.ts";
 import type {
   ActionTypeTable,
+  AuditLogTable,
   Cardinality,
   InstanceSchema,
   LinkTable,
@@ -15,6 +16,7 @@ export type ObjectTypeRow = Selectable<ObjectTypeTable>;
 export type PropertyRow = Selectable<PropertyTable>;
 export type LinkRow = Selectable<LinkTable>;
 export type ActionTypeRow = Selectable<ActionTypeTable>;
+export type AuditLogRow = Selectable<AuditLogTable>;
 
 /** An object type together with the schema whose metadata tables describe it. */
 export type TypeLookup = {
@@ -227,6 +229,42 @@ export async function findActionType(
     .where("object_type_id", "=", objectTypeId)
     .where("api_name", "=", apiName)
     .executeTakeFirst();
+}
+
+/**
+ * Recent audit_log entries, newest first, optionally narrowed to one target
+ * type and/or one instance.
+ *
+ * Every instance schema has its own audit_log, so this fetches up to
+ * limit + offset rows from each and merges them in memory -- correct for any
+ * number of schemas, even though INSTANCE_SCHEMAS only lists one today.
+ */
+export async function loadAuditLog(filters: {
+  targetTypeApiName?: string;
+  targetId?: string;
+  limit: number;
+  offset: number;
+}): Promise<AuditLogRow[]> {
+  const perSchemaLimit = filters.limit + filters.offset;
+  const all: AuditLogRow[] = [];
+
+  for (const metaSchema of INSTANCE_SCHEMAS) {
+    let query = db.withSchema(metaSchema).selectFrom("audit_log").selectAll();
+    if (filters.targetTypeApiName !== undefined) {
+      query = query.where("target_type_api_name", "=", filters.targetTypeApiName);
+    }
+    if (filters.targetId !== undefined) {
+      query = query.where("target_id", "=", filters.targetId);
+    }
+    const rows = await query.orderBy("created_at", "desc").limit(perSchemaLimit).execute();
+    all.push(...rows);
+  }
+
+  // created_at is a real JS Date at runtime (node-postgres parses timestamptz
+  // that way); Kysely's ColumnType wrapper just does not expose it as one here.
+  const toMillis = (value: unknown): number => (value as Date).getTime();
+  all.sort((a, b) => toMillis(b.created_at) - toMillis(a.created_at));
+  return all.slice(filters.offset, filters.offset + filters.limit);
 }
 
 export async function propertyById(

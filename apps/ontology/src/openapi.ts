@@ -67,6 +67,93 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/objects/meta/types/{type}/actions": {
+      get: {
+        tags: ["meta"],
+        summary: "List the actions declared for one object type",
+        operationId: "listActionTypes",
+        parameters: [{ $ref: "#/components/parameters/TypeApiName" }],
+        responses: {
+          "200": {
+            description: "Every action_type row for this object type. A row with no handler still answers 200 here; it only 501s when invoked.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    type: { type: "string" },
+                    count: { type: "integer" },
+                    actions: { type: "array", items: { $ref: "#/components/schemas/ActionType" } },
+                  },
+                  required: ["type", "count", "actions"],
+                },
+              },
+            },
+          },
+          "404": { $ref: "#/components/responses/NotFound" },
+        },
+      },
+    },
+    "/api/objects/meta/audit": {
+      get: {
+        tags: ["meta"],
+        summary: "Query the audit log of action invocations",
+        operationId: "listAuditLog",
+        parameters: [
+          {
+            name: "targetType",
+            in: "query",
+            description: "Filter to one object type's api_name as recorded at the time of the action (survives a later rename or delete of the type).",
+            schema: { type: "string" },
+          },
+          {
+            name: "targetId",
+            in: "query",
+            description: "Filter to one instance id. Requires targetType.",
+            schema: { type: "string" },
+          },
+          {
+            name: "limit",
+            in: "query",
+            description: "Max entries to return (default 100, max 1000).",
+            schema: { type: "integer", minimum: 0, maximum: 1000, default: 100 },
+          },
+          {
+            name: "offset",
+            in: "query",
+            description: "Entries to skip.",
+            schema: { type: "integer", minimum: 0, default: 0 },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Matching entries, newest first.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    count: { type: "integer" },
+                    limit: { type: "integer" },
+                    offset: { type: "integer" },
+                    entries: { type: "array", items: { $ref: "#/components/schemas/AuditLogEntry" } },
+                  },
+                  required: ["count", "limit", "offset", "entries"],
+                },
+              },
+            },
+          },
+          "400": {
+            description: "targetId was given without targetType.",
+            content: {
+              "application/json": {
+                schema: { type: "object", properties: { error: { type: "string" } } },
+              },
+            },
+          },
+        },
+      },
+    },
     "/api/objects/{type}": {
       get: {
         tags: ["objects"],
@@ -377,6 +464,25 @@ export const openApiDocument = {
       Cardinality: {
         type: "string",
         enum: ["one_to_one", "one_to_many", "many_to_one", "many_to_many"],
+      },
+      AuditLogEntry: {
+        type: "object",
+        description:
+          "One recorded action invocation. action_type_id/target_type_id are live foreign keys and " +
+          "null out if the action or type is later renamed or deleted; the *_api_name columns are " +
+          "snapshots taken at write time, so the entry still reads correctly after that happens.",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          action_type_id: { type: "string", format: "uuid", nullable: true },
+          action_api_name: { type: "string" },
+          target_type_id: { type: "string", format: "uuid", nullable: true },
+          target_type_api_name: { type: "string" },
+          target_id: { type: "string" },
+          actor: { type: "string" },
+          params: { type: "object" },
+          result: { type: "object" },
+          created_at: { type: "string", format: "date-time" },
+        },
       },
       ActionInvocationResult: {
         type: "object",
