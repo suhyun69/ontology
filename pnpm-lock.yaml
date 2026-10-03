@@ -30,6 +30,9 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.1
         version: 2.1.1(hono@4.13.7)
+      '@hono/swagger-ui':
+        specifier: ^0.6.1
+        version: 0.6.1(hono@4.13.7)
       hono:
         specifier: ^4.13.7
         version: 4.13.7
@@ -50,6 +53,11 @@ packages:
     engines: {node: '>=20'}
     peerDependencies:
       hono: ^4
+
+  '@hono/swagger-ui@0.6.1':
+    resolution: {integrity: sha512-sJTvldu1GPeEPfyeLG7gRj+W4vEuD+JDi+JjJ3TJs/DvMUtBLs0KJO5yokGegWWdy5qrbdnQGekbhgNRmPmYKQ==}
+    peerDependencies:
+      hono: '>=4.0.0'
 
   '@types/node@26.5.1':
     resolution: {integrity: sha512-CzNm2FezW4VR/LjG6yUdiEgLE/rAQ9Slj5gCu/C2VrdcW7I0ahNZ8DRbHT7zOZ6r3ONgd/bsQIeSaoDGrd1C6g==}
@@ -256,6 +264,10 @@ snapshots:
   '@cfworker/json-schema@4.1.1': {}
 
   '@hono/node-server@2.1.1(hono@4.13.7)':
+    dependencies:
+      hono: 4.13.7
+
+  '@hono/swagger-ui@0.6.1(hono@4.13.7)':
     dependencies:
       hono: 4.13.7
 

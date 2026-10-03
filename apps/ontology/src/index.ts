@@ -1,12 +1,17 @@
+import { swaggerUI } from "@hono/swagger-ui";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { sql } from "kysely";
 import { closeDb, db } from "./db.ts";
 import { HttpError } from "./errors.ts";
+import { openApiDocument } from "./openapi.ts";
 import { metaRoutes } from "./routes/meta.ts";
 import { objectRoutes } from "./routes/objects.ts";
 
 const app = new Hono();
+
+app.get("/api/objects/openapi.json", (c) => c.json(openApiDocument));
+app.get("/api/objects/docs", swaggerUI({ url: "/api/objects/openapi.json" }));
 
 // Mounted before the instance routes: "meta" would otherwise be a candidate
 // for :type, and /api/objects/meta/types would read as type "meta", id "types".
