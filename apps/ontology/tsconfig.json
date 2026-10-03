@@ -1,4 +1,5 @@
 {
+  // 공통 설정(노출 스트리핑 전제 컴파일러 옵션)은 루트 base config에서 상속.
   "extends": "../../tsconfig.base.json",
   "include": ["src/**/*.ts"]
 }
