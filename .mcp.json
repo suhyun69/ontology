@@ -1,4 +1,5 @@
 {
+  "//": "readonly=true로 조회만 가능 — Claude가 DB를 바꿀 수 없게 제한한 Neon MCP 서버.",
   "mcpServers": {
     "neon": {
       "type": "http",
