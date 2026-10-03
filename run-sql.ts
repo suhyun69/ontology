@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// .sql 파일 경로 하나를 받아 DATABASE_URL로 접속해 실행하고, statement별 결과를 출력하는 CLI.
 import { readFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import pg from "pg";
@@ -54,6 +55,7 @@ try {
 
   console.log(`${displayPath} — ${results.length} statement(s) in ${elapsedMs}ms\n`);
 
+  // statement마다 명령어(SELECT/INSERT 등)와 영향받은 행 수, 있으면 결과 행을 표로 출력.
   results.forEach((result, index) => {
     const command = result.command || "STATEMENT";
     const rowCount = result.rowCount ?? 0;
