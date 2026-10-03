@@ -33,5 +33,5 @@ Defaults to `http://localhost:3000` (override with `PORT`).
 
 With the server running:
 
-- `GET /api/objects/docs` — Swagger UI
-- `GET /api/objects/openapi.json` — the underlying OpenAPI 3.1 document
+- Swagger UI: http://localhost:3000/api/objects/docs
+- OpenAPI 3.1 document: http://localhost:3000/api/objects/openapi.json
