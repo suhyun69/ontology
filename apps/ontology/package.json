@@ -1,5 +1,5 @@
 {
-  "//": "첫 워크스페이스 패키지. start는 루트 .env를 읽어 src/index.ts를 Node가 직접 실행한다.",
+  "//": "첫 워크스페이스 패키지. start는 루트 .env를 읽어 src/index.ts를 Node가 직접 실행한다. hono+@hono/node-server는 Node에서 Hono 서버를 구동하는 데, kysely는 DB 쿼리 빌더, @cfworker/json-schema는 객체 타입 메타데이터 검증, pg는 Postgres 드라이버로 쓴다.",
   "name": "@ontology/ontology",
   "version": "0.0.0",
   "private": true,
