@@ -1,5 +1,5 @@
 {
-  "//": "pnpm 워크스페이스 루트. apps/* 패키지들을 Node 24+에서 .ts 파일 그대로 실행하는 모노레포 뼈대.",
+  "//": "pnpm 워크스페이스 루트. apps/* 패키지들을 Node 24+에서 .ts 파일 그대로 실행하는 모노레포 뼈대. pg는 Neon Postgres 접속용 클라이언트, @types/pg는 pg에 타입 선언이 없어 추가한 타입 패키지.",
   "name": "ontology",
   "version": "0.0.0",
   "private": true,
