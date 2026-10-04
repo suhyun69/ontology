@@ -179,7 +179,7 @@ export const openApiDocument = {
             description:
               "Any other query key is matched against the type's properties and used as an equality " +
               "filter, coerced to that property's data_type (e.g. ?status=fermenting). Unknown keys, " +
-              "and string_array/json properties, return 400.",
+              "and string[]/json properties, return 400.",
             schema: { type: "string" },
           },
         ],
@@ -335,7 +335,7 @@ export const openApiDocument = {
         name: "type",
         in: "path",
         required: true,
-        description: "The object type's api_name, e.g. Batch.",
+        description: "The object type's api_name, e.g. batch.",
         schema: { type: "string" },
       },
     },
@@ -392,10 +392,10 @@ export const openApiDocument = {
           name: { type: "string" },
           description: { type: "string", nullable: true },
           status: { type: "string", enum: ["active", "experimental", "deprecated"] },
-          visibility: { type: "string", enum: ["normal", "prominent", "hidden"] },
+          visibility: { type: "string", enum: ["visible", "prominent", "hidden"] },
           point_of_contact: { type: "string", nullable: true },
           edits_enabled: { type: "boolean" },
-          schema: { type: "string" },
+          schema: { type: "string", description: "Postgres schema the instance rows live in. No default; every row states it." },
           datasource_table: { type: "string" },
         },
       },
@@ -408,7 +408,10 @@ export const openApiDocument = {
           name: { type: "string" },
           data_type: {
             type: "string",
-            enum: ["string", "integer", "double", "boolean", "timestamp", "date", "string_array", "json"],
+            description:
+              "The schema declares no CHECK constraint on this column, so a row could in principle " +
+              "name something else; these are the values the application actually understands.",
+            enum: ["string", "number", "boolean", "enum", "datetime", "date", "json", "string[]"],
           },
           required: { type: "boolean" },
           is_title: { type: "boolean" },
@@ -468,19 +471,19 @@ export const openApiDocument = {
       AuditLogEntry: {
         type: "object",
         description:
-          "One recorded action invocation. action_type_id/target_type_id are live foreign keys and " +
-          "null out if the action or type is later renamed or deleted; the *_api_name columns are " +
-          "snapshots taken at write time, so the entry still reads correctly after that happens.",
+          "One recorded action invocation. action_type_id/target_type_id are NOT NULL foreign keys " +
+          "(an action_type or object_type cannot be deleted while a log row cites it); the *_api_name " +
+          "columns are a snapshot taken at write time, kept alongside the ids as the readable label.",
         properties: {
           id: { type: "string", format: "uuid" },
-          action_type_id: { type: "string", format: "uuid", nullable: true },
+          action_type_id: { type: "string", format: "uuid" },
           action_api_name: { type: "string" },
-          target_type_id: { type: "string", format: "uuid", nullable: true },
+          target_type_id: { type: "string", format: "uuid" },
           target_type_api_name: { type: "string" },
           target_id: { type: "string" },
           actor: { type: "string" },
-          params: { type: "object" },
-          result: { type: "object" },
+          params: { type: "object", nullable: true },
+          result: { type: "object", nullable: true },
           created_at: { type: "string", format: "date-time" },
         },
       },
