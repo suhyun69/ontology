@@ -9,10 +9,10 @@ pnpm install
 echo 'DATABASE_URL=postgres://...' >> .env
 ```
 
-`DATABASE_URL` must point at a database with the `manufacturing` schema applied (see [sql/manufacturing.sql](sql/manufacturing.sql)):
+`DATABASE_URL` must point at a database with the `manufacturing` schema applied (see [seeds/01-manufacturing-foundation.sql](seeds/01-manufacturing-foundation.sql)):
 
 ```bash
-pnpm run-sql sql/manufacturing.sql
+pnpm run-sql seeds/01-manufacturing-foundation.sql
 ```
 
 ## Running the server
@@ -26,8 +26,10 @@ pnpm start   # single run
 Defaults to `http://localhost:3000` (override with `PORT`).
 
 - `GET /health` — liveness plus a `select 1` round trip to the database.
-- `GET /api/objects/meta/types` and `/api/objects/meta/types/:type` — the ontology's object types, properties, links and actions.
+- `GET /api/objects/meta/types`, `/api/objects/meta/types/:type` and `/api/objects/meta/types/:type/actions` — the ontology's object types, properties, links and declared actions.
+- `GET /api/objects/meta/audit` — the audit log of action invocations, filterable by `targetType`/`targetId`.
 - `GET /api/objects/:type` and `/api/objects/:type/:id` — instance data for any registered object type, with links resolved one hop.
+- `POST /api/objects/:type/:id/actions/:actionName` — invoke a declared action (e.g. `batch.deferStart`).
 
 ## API docs
 
