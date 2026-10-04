@@ -1,5 +1,5 @@
 {
-  "//": "pnpm 워크스페이스 루트. apps/* 패키지들을 Node 24+에서 .ts 파일 그대로 실행하는 모노레포 뼈대. pg는 Neon Postgres 접속용 클라이언트, @types/pg는 pg에 타입 선언이 없어 추가한 타입 패키지. run-sql 스크립트는 .env의 DATABASE_URL로 .sql 파일을 실행하는 CLI(run-sql.ts).",
+  "//": "pnpm 워크스페이스 루트. apps/* 패키지들을 Node 24+에서 .ts 파일 그대로 실행하는 모노레포 뼈대. pg는 Neon Postgres 접속용 클라이언트, @types/pg는 pg에 타입 선언이 없어 추가한 타입 패키지. run-sql 스크립트는 .env의 DATABASE_URL로 .sql 파일을 실행하는 CLI(run-sql.ts). 루트 dev는 dev 스크립트가 있는 모든 워크스페이스(ontology, data-platform)를 동시에 띄운다.",
   "name": "ontology",
   "version": "0.0.0",
   "private": true,
@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "dev": "pnpm --parallel -r --if-present run dev",
     "run-sql": "node --env-file=.env run-sql.ts",
     "typecheck": "tsc --noEmit && pnpm -r typecheck"
   },
