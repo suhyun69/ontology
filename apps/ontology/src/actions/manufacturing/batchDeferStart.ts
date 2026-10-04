@@ -6,8 +6,8 @@ import { defineAction } from "../types.ts";
 import type { ActionContext } from "../types.ts";
 
 /**
- * The fields of Batch this handler reads, keyed the way the route hands them
- * over: property api_name, not datasource_column.
+ * 이 핸들러가 읽는 Batch의 필드. 라우트가 넘겨주는 형태 그대로 키를 잡는다 —
+ * datasource_column이 아니라 property의 api_name 기준.
  */
 type BatchInstance = Instance & {
   id: string;
@@ -20,8 +20,8 @@ type DeferStartParams = {
 };
 
 /**
- * Only a batch that has not started yet can be deferred. The schema spells the
- * status lowercase; see sql/manufacturing.sql for the full set.
+ * 아직 시작하지 않은 배치만 시작일을 미룰 수 있다. 스키마에서는 상태값을
+ * lowercase로 적는다; 전체 목록은 sql/manufacturing.sql 참고.
  */
 const DEFERRABLE_STATUS = "planned";
 
@@ -30,8 +30,8 @@ async function deferStart(
   params: DeferStartParams,
   context: ActionContext,
 ): Promise<unknown> {
-  // Shape is already settled by the route's JSON Schema check; what is left is
-  // whether this particular batch may be deferred to this particular date.
+  // 모양(shape)은 라우트의 JSON Schema 검사에서 이미 끝났다; 남은 건 이 배치를
+  // 이 날짜로 미뤄도 되는지 여부뿐이다.
   if (batch.status !== DEFERRABLE_STATUS) {
     throw new HttpError(
       409,
@@ -48,8 +48,8 @@ async function deferStart(
     );
   }
 
-  // The write and its audit row go together: an unrecorded change to a planned
-  // start is exactly what the log exists to prevent.
+  // 쓰기와 그 audit 행은 한 세트다: planned_start가 기록 없이 바뀌는 것이야말로
+  // 이 로그가 존재하는 이유다.
   return await db.transaction().execute(async (trx) => {
     const updated = await trx
       .updateTable("manufacturing.batch")
@@ -62,8 +62,8 @@ async function deferStart(
       .withSchema(context.metaSchema)
       .insertInto("audit_log")
       .values({
-        // Dual snapshot: the ids link the row to live metadata, the api_names
-        // survive a rename or a delete that would null those ids out.
+        // 이중 스냅샷: id는 이 행을 현재 메타데이터와 연결해주고, api_name은
+        // 그 id들을 null로 만드는 리네임/삭제 이후에도 살아남는다.
         action_type_id: context.actionType.id,
         action_api_name: context.actionType.api_name,
         target_type_id: context.objectType.id,
