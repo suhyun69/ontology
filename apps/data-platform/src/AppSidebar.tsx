@@ -1,7 +1,7 @@
 import { Button, Tooltip } from "@blueprintjs/core";
 import type { IconName } from "@blueprintjs/core";
 
-/** The apps this shell can show. */
+/** 이 셸이 보여줄 수 있는 앱들. */
 export type AppId = "ontology-manager" | "object-explorer";
 
 type AppEntry = {
@@ -21,10 +21,9 @@ type AppSidebarProps = {
 };
 
 /**
- * The outermost rail: one icon per app.
+ * 가장 바깥쪽 레일: 앱마다 아이콘 하나씩.
  *
- * Icon-only, so the name lives in a tooltip rather than taking width from the
- * app beside it.
+ * 아이콘만 두고 이름은 툴팁으로 — 옆에 있는 앱 영역의 너비를 뺏지 않기 위해.
  */
 export function AppSidebar({ active, onSelect }: AppSidebarProps) {
   return (

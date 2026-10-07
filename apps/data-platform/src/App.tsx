@@ -7,11 +7,11 @@ import { ObjectExplorer } from "./ObjectExplorer.tsx";
 import { OntologyManager } from "./OntologyManager.tsx";
 
 /**
- * The shell: an app rail, and whichever app it has selected.
+ * 셸(shell): 앱 레일과, 그 중 선택된 앱.
  *
- * The type list lives here because both apps show the same one, so switching
- * between them does not refetch it -- and a rename in the Ontology Manager is
- * reflected in the Explorer's rail without a reload.
+ * 타입 목록은 두 앱이 똑같은 걸 보여주기 때문에 여기(셸)에 둔다 — 앱을
+ * 전환해도 다시 불러오지 않고, Ontology Manager에서 이름을 바꾸면
+ * 리로드 없이 Explorer의 레일에도 바로 반영된다.
  */
 export function App() {
   const [app, setApp] = useState<AppId>("ontology-manager");

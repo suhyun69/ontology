@@ -2,7 +2,7 @@ import { Classes, Tag } from "@blueprintjs/core";
 import type { ReactNode } from "react";
 import type { Instance, Property, TypeDetail } from "./api.ts";
 
-/** Stands in for a null or absent value, so an empty cell never reads as a blank string. */
+/** null/없음 값을 대신 보여준다 — 빈 셀이 그냥 빈 문자열로 읽히지 않게. */
 export function Empty() {
   return <span className={Classes.TEXT_MUTED}>—</span>;
 }
@@ -15,12 +15,12 @@ function formatTimestamp(value: unknown, withTime: boolean): ReactNode {
 }
 
 /**
- * Renders a value the way its declared data_type asks for.
+ * 선언된 data_type이 요구하는 방식대로 값을 렌더링한다.
  *
- * numeric columns arrive as strings -- node-postgres will not put a value that
- * does not fit a float64 through one (see the Numeric type in the API's db.ts)
- * -- so a numeric string is printed as it came rather than parsed and
- * reformatted, which would be the one way to lose the precision it protects.
+ * numeric 컬럼은 문자열로 온다 — node-postgres는 float64에 안 들어가는 값을
+ * 그대로 보내지 않기 때문(API의 db.ts에 있는 Numeric 타입 참고) — 그래서
+ * numeric 문자열은 파싱해서 재포맷하지 않고 온 그대로 출력한다. 파싱해버리면
+ * 그 문자열이 지키려는 정밀도를 잃는 유일한 방법이 되기 때문.
  */
 export function formatValue(value: unknown, dataType: string): ReactNode {
   if (value === null || value === undefined || value === "") return <Empty />;
@@ -63,30 +63,30 @@ export function formatValue(value: unknown, dataType: string): ReactNode {
   }
 }
 
-// ------------------------------------------------------- metadata lookups
+// ------------------------------------------------------- 메타데이터 조회
 
-/** The property holding an instance's id. */
+/** 인스턴스의 id를 담고 있는 속성. */
 export function primaryKeyProperty(meta: TypeDetail): Property | undefined {
   return meta.properties.find((property) => property.is_primary_key);
 }
 
 /**
- * The property standing in for the whole instance.
+ * 인스턴스 전체를 대표하는 속성.
  *
- * Types vary in which one that is -- Tank titles on `name`, Batch on its id --
- * so it comes from the metadata, falling back to the primary key for a type
- * that marks no title at all.
+ * 타입마다 어떤 속성인지가 다르다 — Tank는 `name`으로, Batch는 자기 id로
+ * 제목을 삼음 — 그래서 메타데이터에서 가져오고, title을 전혀 지정 안 한
+ * 타입이면 primary key로 폴백한다.
  */
 export function titleProperty(meta: TypeDetail): Property | undefined {
   return meta.properties.find((property) => property.is_title) ?? primaryKeyProperty(meta);
 }
 
-/** Not every type declares a status; the ones that do get an extra column. */
+/** 모든 타입이 status를 선언하지는 않는다; 선언한 타입만 컬럼이 하나 더 생긴다. */
 export function statusProperty(meta: TypeDetail): Property | undefined {
   return meta.properties.find((property) => property.api_name === "status");
 }
 
-/** How an instance is labelled when it stands for itself, e.g. in a link list. */
+/** 링크 목록 등에서 인스턴스 자신을 나타낼 때 어떻게 라벨링할지. */
 export function instanceLabel(instance: Instance, meta: TypeDetail | undefined): string {
   if (meta === undefined) return "…";
 
@@ -97,7 +97,7 @@ export function instanceLabel(instance: Instance, meta: TypeDetail | undefined):
   return String(instanceId(instance, meta) ?? "—");
 }
 
-/** An instance's id, or undefined when the type declares no primary key. */
+/** 인스턴스의 id. 타입이 primary key를 선언하지 않았으면 undefined. */
 export function instanceId(instance: Instance, meta: TypeDetail | undefined): string | undefined {
   if (meta === undefined) return undefined;
 

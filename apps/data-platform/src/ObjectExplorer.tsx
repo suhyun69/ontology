@@ -6,7 +6,7 @@ import { InstanceList } from "./InstanceList.tsx";
 import { ObjectDetail } from "./ObjectDetail.tsx";
 import { TypeRail } from "./TypeRail.tsx";
 
-/** One entry on the navigation stack. */
+/** 내비게이션 스택의 항목 하나. */
 type ExplorerView =
   | { kind: "list"; type: string }
   | { kind: "detail"; type: string; id: string };
@@ -21,15 +21,15 @@ function errorMessage(error: unknown): string {
 }
 
 export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
-  // The stack is the history: the last entry is on screen, and everything
-  // before it is somewhere to go back to.
+  // 이 스택이 곧 히스토리다: 마지막 항목이 화면에 보이고, 그 앞의 모든 항목은
+  // 돌아갈 수 있는 지점이다.
   const [stack, setStack] = useState<ExplorerView[]>([]);
   const [page, setPage] = useState<InstancePage | null>(null);
   const [detail, setDetail] = useState<InstanceDetail | null>(null);
   const [viewError, setViewError] = useState<string | null>(null);
 
   const [meta, setMeta] = useState<Record<string, TypeDetail>>({});
-  // Types already fetched or in flight, so a cache miss is requested once.
+  // 이미 가져왔거나 요청 중인 타입들 — 캐시 미스가 나도 한 번만 요청되게.
   const requested = useRef<Set<string>>(new Set());
 
   const view = stack[stack.length - 1];
@@ -41,12 +41,12 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     loadObjectType(type)
       .then((loaded) => setMeta((current) => ({ ...current, [type]: loaded })))
       .catch(() => {
-        // Left out of the cache and un-requested, so a later view retries.
+        // 캐시에도 안 넣고 요청 표시도 지운다 — 나중 뷰가 다시 시도할 수 있게.
         requested.current.delete(type);
       });
   }, []);
 
-  // Land on the first type rather than an empty pane.
+  // 빈 패널 대신 첫 번째 타입으로 바로 진입.
   useEffect(() => {
     const first = types[0];
     if (first !== undefined) {
@@ -54,7 +54,7 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     }
   }, [types]);
 
-  // Fetch whatever the top of the stack is showing.
+  // 스택 맨 위가 보여주는 걸 가져온다.
   useEffect(() => {
     if (view === undefined) return;
 
@@ -87,8 +87,8 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
     };
   }, [view, requestMeta]);
 
-  // A link's targets are labelled and addressed by the target type's own
-  // metadata, which is a different type from the one being shown.
+  // 링크의 타겟들은 지금 보고 있는 타입이 아니라 타겟 타입 자신의 메타데이터로
+  // 라벨링되고 주소가 결정된다.
   useEffect(() => {
     if (detail === null) return;
     for (const link of Object.values(detail.links)) {
@@ -97,7 +97,7 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
   }, [detail, requestMeta]);
 
   const selectType = useCallback((type: string) => {
-    // A rail click is a fresh starting point, not a step deeper.
+    // 레일 클릭은 한 단계 더 들어가는 게 아니라 새로운 출발점이다.
     setStack([{ kind: "list", type }]);
   }, []);
 
@@ -171,7 +171,7 @@ export function ObjectExplorer({ types, loadError }: ObjectExplorerProps) {
   );
 }
 
-/** The stack, rendered so any earlier entry can be jumped back to. */
+/** 스택을 렌더링 — 이전의 어떤 항목으로도 바로 점프할 수 있게. */
 function Breadcrumbs({
   stack,
   typeName,

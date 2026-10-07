@@ -8,7 +8,7 @@ import { TypeRail } from "./TypeRail.tsx";
 type OntologyManagerProps = {
   types: readonly ObjectTypeSummary[];
   loadError: string | null;
-  /** Reports a saved row upwards, so the shared type list follows a rename. */
+  /** 저장된 행을 위로 올려보고해서, 공유 타입 목록이 리네임을 따라가게 한다. */
   onObjectTypeSaved: (objectType: ObjectType) => void;
 };
 
@@ -23,8 +23,8 @@ export function OntologyManager({ types, loadError, onObjectTypeSaved }: Ontolog
 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  // Changes on every load and every rejected save, so the inline editors drop
-  // whatever was typed and re-render from what the server actually holds.
+  // 로드할 때마다, 그리고 저장이 거부될 때마다 바뀐다 — 그래서 인라인
+  // 에디터들이 입력하던 값을 버리고 서버가 실제로 들고 있는 값으로 다시 렌더링한다.
   const [revision, setRevision] = useState(0);
 
   useEffect(() => {

@@ -9,12 +9,11 @@ type InstanceListProps = {
 };
 
 /**
- * Every instance of one type.
+ * 한 타입의 모든 인스턴스.
  *
- * The columns are chosen from metadata rather than fixed, because types do not
- * agree on what identifies them: the title is whichever property is flagged
- * is_title, the id column appears only when that is not already the title, and
- * status only when the type declares one.
+ * 컬럼을 고정하지 않고 메타데이터에서 고른다 — 타입마다 뭘로 식별되는지가
+ * 다르기 때문. 제목은 is_title로 표시된 속성, ID 컬럼은 그게 이미 제목이
+ * 아닐 때만, status 컬럼은 그 타입이 status를 선언했을 때만 나타난다.
  */
 export function InstanceList({ meta, page, onOpen }: InstanceListProps) {
   if (meta === undefined || page === null) {
@@ -76,8 +75,8 @@ function InstanceRow({
   const status = statusProperty(meta);
   const id = instanceId(instance, meta);
 
-  // Without an id there is nothing to open, so the row stays inert rather than
-  // navigating to a detail view that cannot be fetched.
+  // id가 없으면 열 곳이 없다 — 가져올 수도 없는 상세 뷰로 이동시키는 대신
+  // 행을 그냥 비활성 상태로 둔다.
   const open = id === undefined ? undefined : () => onOpen(id);
 
   return (

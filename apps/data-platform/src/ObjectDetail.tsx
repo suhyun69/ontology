@@ -14,7 +14,7 @@ import { Empty, formatValue, instanceId, instanceLabel, titleProperty } from "./
 type ObjectDetailProps = {
   meta: TypeDetail | undefined;
   detail: InstanceDetail | null;
-  /** Metadata for the types this instance links to, keyed by api_name. */
+  /** 이 인스턴스가 링크로 가리키는 타입들의 메타데이터, api_name으로 키를 잡음. */
   linkMeta: Record<string, TypeDetail>;
   onOpen: (type: string, id: string) => void;
 };
@@ -68,13 +68,13 @@ export function ObjectDetail({ meta, detail, linkMeta, onOpen }: ObjectDetailPro
   );
 }
 
-// ---------------------------------------------------------- action strip
+// ---------------------------------------------------------- 액션 스트립
 
 /**
- * One button per action the type declares.
+ * 타입이 선언한 액션마다 버튼 하나씩.
  *
- * Nothing is wired up yet, so these carry no click handler -- the strip is here
- * to show which actions exist on this type.
+ * 아직 아무것도 연결 안 돼 있어서 클릭 핸들러가 없다 — 이 스트립은
+ * "이 타입에 어떤 액션이 있는지"를 보여주는 용도까지만.
  */
 function ActionStrip({ actions }: { actions: TypeDetail["actions"] }) {
   if (actions.length === 0) {
@@ -96,9 +96,9 @@ function ActionStrip({ actions }: { actions: TypeDetail["actions"] }) {
   );
 }
 
-// ------------------------------------------------------------ link panel
+// ------------------------------------------------------------ 링크 패널
 
-/** The instances one link resolved to, always as a list. */
+/** 한 링크가 가리키는 인스턴스들 — 항상 리스트 형태로. */
 function targets(link: ResolvedLink): Instance[] {
   if (link.value === null) return [];
   return Array.isArray(link.value) ? link.value : [link.value];
@@ -170,8 +170,8 @@ function LinkTarget({
   const id = instanceId(instance, meta);
   const label = instanceLabel(instance, meta);
 
-  // Until the target type's metadata arrives there is no way to know which
-  // property holds its id, so the row renders but does not yet navigate.
+  // 타겟 타입의 메타데이터가 도착하기 전까진 어떤 속성이 id인지 알 방법이
+  // 없다 — 그래서 행은 렌더링되지만 아직 이동은 안 된다.
   if (id === undefined) {
     return <div className="ox-link-target ox-link-target-pending">{label}</div>;
   }

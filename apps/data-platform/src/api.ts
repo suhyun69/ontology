@@ -70,9 +70,9 @@ export type ObjectTypeUpdate = {
   description?: string | null;
 };
 
-// ------------------------------------------------------------- instances
+// ------------------------------------------------------------- 인스턴스
 
-/** An instance row, keyed by property api_name. Values are whatever the column holds. */
+/** 인스턴스 행, property의 api_name으로 키를 잡음. 값은 그 컬럼이 들고 있는 것 그대로. */
 export type Instance = Record<string, unknown>;
 
 export type InstancePage = {
@@ -84,11 +84,11 @@ export type InstancePage = {
 };
 
 /**
- * One link followed from an instance.
+ * 인스턴스에서 따라간 링크 하나.
  *
- * `value` is an array when this end of the link is plural, a single instance
- * when it is not, and null when the foreign key is unset -- the server has
- * already applied the cardinality, so nothing here has to guess.
+ * `value`는 이쪽 끝이 복수면 배열, 아니면 단일 인스턴스, FK가 비어있으면
+ * null이다 — 서버가 이미 cardinality를 적용해서 보내주므로 여기서 추측할
+ * 필요가 없다.
  */
 export type ResolvedLink = {
   name: string;
@@ -102,7 +102,7 @@ export type InstanceDetail = {
   type: string;
   id: unknown;
   properties: Instance;
-  /** Keyed by the link's api_name, as seen from this instance. */
+  /** 이 인스턴스 기준으로 본 링크의 api_name으로 키를 잡음. */
   links: Record<string, ResolvedLink>;
 };
 
