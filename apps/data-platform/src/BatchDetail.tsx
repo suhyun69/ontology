@@ -32,7 +32,7 @@ const BAND_INTENT: Record<DeviationBand, Intent> = {
 
 type BatchDetailProps = {
   batchId: string;
-  /** Known from the row already, so the maintenance fetch need not wait on the batch. */
+  /** 이미 테이블 행에서 알고 있는 값이라, 정비 이력 조회가 배치 응답을 기다릴 필요가 없다. */
   tankId: string | null;
 };
 
@@ -47,7 +47,7 @@ function text(value: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null;
 }
 
-/** A link's value as a list, whatever its cardinality. */
+/** 링크의 값을 cardinality와 상관없이 항상 리스트로. */
 function linkTargets(detail: InstanceDetail, apiName: string): Instance[] {
   const link = detail.links[apiName];
   if (link === undefined || link.value === null) return [];
@@ -66,7 +66,7 @@ function formatDate(value: unknown): string {
   return Number.isNaN(parsed.getTime()) ? stamp : parsed.toLocaleDateString();
 }
 
-// ------------------------------------------------------------------- view
+// ------------------------------------------------------------------- 뷰
 
 export function BatchDetail({ batchId, tankId }: BatchDetailProps) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -77,8 +77,8 @@ export function BatchDetail({ batchId, tankId }: BatchDetailProps) {
     setLoaded(null);
     setError(null);
 
-    // All three go at once: the tank is already known from the row, so the
-    // maintenance query does not have to wait for the batch to come back.
+    // 셋 다 동시에 나간다: 탱크는 이미 행에서 알고 있는 값이라, 정비 조회가
+    // 배치 응답이 돌아올 때까지 기다릴 필요가 없다.
     Promise.all([
       loadInstance("batch", batchId),
       tankId === null
@@ -189,9 +189,9 @@ export function BatchDetail({ batchId, tankId }: BatchDetailProps) {
         collapsible
         collapseProps={{ defaultIsOpen: true }}
         compact
-        // Spread rather than passed as undefined: rightElement is declared
-        // optional without undefined in its type, which exactOptionalPropertyTypes
-        // takes at its word.
+        // undefined로 넘기지 않고 스프레드하는 이유: rightElement는 타입에
+        // undefined 없이 optional로만 선언돼 있고, exactOptionalPropertyTypes가
+        // 그걸 글자 그대로 받아들이기 때문.
         {...(servicedDuringFermentation > 0
           ? {
               rightElement: (
@@ -279,7 +279,7 @@ export function BatchDetail({ batchId, tankId }: BatchDetailProps) {
   );
 }
 
-// ---------------------------------------------------------------- pieces
+// ---------------------------------------------------------------- 조각들
 
 function Muted({ children }: { children: React.ReactNode }) {
   return <span className={Classes.TEXT_MUTED}>{children}</span>;
@@ -299,10 +299,10 @@ function Facts({ rows }: { rows: readonly [string, React.ReactNode][] }) {
 }
 
 /**
- * The recipe's curve, with the points this batch's target was read from marked.
+ * 레시피의 커브에, 이 배치의 목표값을 읽어낸 포인트를 표시한 것.
  *
- * A batch rarely sits on a sampled day, so the marked points are the pair it
- * falls between and the figure below is the interpolation across them.
+ * 배치가 샘플링된 날짜에 정확히 걸리는 경우는 드물어서, 표시된 포인트는
+ * 그 사이에 걸친 양쪽 샘플이고 아래 숫자는 그 둘을 보간한 값이다.
  */
 function CurveStrip({
   curve,
@@ -385,7 +385,7 @@ function MaintenanceList({ logs, window }: { logs: readonly Instance[]; window: 
   );
 }
 
-/** One audit entry, expanding to show what it was called with and what came back. */
+/** 감사 이력 항목 하나 — 펼치면 어떤 값으로 호출됐고 뭐가 돌아왔는지 보여줌. */
 function AuditRow({ entry }: { entry: AuditEntry }) {
   const [open, setOpen] = useState(false);
 
@@ -405,7 +405,7 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
       <Collapse isOpen={open}>
         <div className="bd-audit-body">
           <div className={`bd-curve-label ${Classes.TEXT_MUTED}`}>
-            {/* The name it ran under, which a later rename does not change. */}
+            {/* 실행 당시의 이름 — 나중에 리네임돼도 이 값은 안 바뀐다. */}
             action <span className="om-mono">{entry.action}</span>
           </div>
           <div className={`bd-curve-label ${Classes.TEXT_MUTED}`}>params</div>

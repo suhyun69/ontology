@@ -153,11 +153,11 @@ export function loadObjectType(apiName: string): Promise<TypeDetail> {
   return request(`/api/objects/meta/types/${encodeURIComponent(apiName)}`);
 }
 
-/** One action, as the audit log recorded it. */
+/** 액션 하나, audit log가 기록한 그대로. */
 export type AuditEntry = {
-  /** The api_name snapshotted when it ran, which survives a later rename. */
+  /** 실행 당시 스냅샷된 api_name — 나중에 리네임돼도 이 값은 그대로 남는다. */
   action: string;
-  /** What that action is called now. */
+  /** 그 액션의 현재 이름. */
   actionName: string;
   actor: string;
   params: Record<string, unknown> | null;
@@ -173,7 +173,7 @@ export type AuditPage = {
   entries: AuditEntry[];
 };
 
-/** `filters` are matched against property api_names by the list route. */
+/** `filters`는 list 라우트가 property api_name 기준으로 매칭한다. */
 export function listInstances(
   type: string,
   filters: Readonly<Record<string, string>> = {},
