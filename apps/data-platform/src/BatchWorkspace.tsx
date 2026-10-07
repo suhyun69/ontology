@@ -21,7 +21,7 @@ import { deviationFor, tanksServicedSince, toNumber } from "./batchAnalysis.ts";
 import type { Deviation, DeviationBand, SugarCurve } from "./batchAnalysis.ts";
 import { courseNow, courseNowAnchor, daysBeforeCourseNow } from "./courseNow.ts";
 
-/** How far back "recent" reaches for tank maintenance. */
+/** 탱크 정비에서 "최근"이 얼마나 과거까지를 가리키는지. */
 const MAINTENANCE_WINDOW_DAYS = 7;
 
 const FERMENTING = "fermenting";
@@ -41,7 +41,7 @@ type BatchRow = {
   tankId: string | null;
   tankName: string | null;
   deviation: Deviation | null;
-  /** This batch's tank was serviced inside the window. */
+  /** 이 배치의 탱크가 그 기간 안에 정비를 받았는지. */
   tankServicedRecently: boolean;
 };
 
@@ -49,7 +49,7 @@ function text(value: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null;
 }
 
-// ------------------------------------------------------------------- data
+// ------------------------------------------------------------------- 데이터
 
 function buildRows(
   batches: readonly Instance[],
@@ -93,7 +93,7 @@ function buildRows(
   });
 }
 
-// ------------------------------------------------------------------- view
+// ------------------------------------------------------------------- 뷰
 
 type BatchWorkspaceProps = {
   loadError: string | null;
@@ -111,8 +111,8 @@ export function BatchWorkspace({ loadError }: BatchWorkspaceProps) {
   useEffect(() => {
     let cancelled = false;
 
-    // The table needs its batches, the curves to read them against, tank names
-    // to label them, and the maintenance history behind the third metric.
+    // 테이블엔 배치 자체, 그걸 읽어낼 커브, 라벨링용 탱크 이름, 그리고 세
+    // 번째 메트릭의 근거가 되는 정비 이력까지 전부 필요하다.
     Promise.all([
       listInstances("batch"),
       listInstances("recipe"),
@@ -321,7 +321,7 @@ function Metric({
   );
 }
 
-// ------------------------------------------------------------------ table
+// ------------------------------------------------------------------ 테이블
 
 function BatchTable({
   rows,
@@ -397,7 +397,7 @@ function Muted({ children }: { children: React.ReactNode }) {
   return <span className={Classes.TEXT_MUTED}>{children}</span>;
 }
 
-/** Current reading, how far it sits from the curve, and the target itself. */
+/** 현재 측정값, 커브에서 얼마나 벗어나 있는지, 그리고 목표값 자체. */
 function SugarCell({ deviation }: { deviation: Deviation | null }) {
   if (deviation === null) return <Muted>—</Muted>;
 

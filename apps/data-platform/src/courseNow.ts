@@ -1,14 +1,13 @@
 /**
- * The course's clock, in the browser.
+ * 브라우저에서의 코스 시계.
  *
- * The API anchors its own clock to COURSE_NOW (see the ontology's clock.ts), so
- * a window this UI measures -- "in the last 7 days" -- has to be measured from
- * the same instant. Reading the real clock instead would quietly answer a
- * question about today rather than about the course's timeline, and the answer
- * would look perfectly plausible.
+ * API는 자신의 시계를 COURSE_NOW에 고정한다(온톨로지의 clock.ts 참고). 그래서
+ * 이 UI가 "최근 7일" 같은 기간을 측정할 때도 똑같은 시점을 기준으로 삼아야
+ * 한다. 대신 실제 시계를 읽으면, 코스의 타임라인이 아니라 오늘에 대한
+ * 질문에 조용히 답해버리게 되고 그 답은 겉으로는 멀쩡해 보인다.
  *
- * Injected at build time by vite.config.ts, which reads only this one variable
- * out of the workspace .env.
+ * vite.config.ts가 빌드 시점에 주입한다 — 워크스페이스 .env에서 이 변수
+ * 하나만 읽어온다.
  */
 declare const __COURSE_NOW__: string | null;
 
@@ -24,20 +23,20 @@ function anchorOffsetMs(): number {
   return anchor - Date.now();
 }
 
-/** Fixed at load, so the clock then advances at the ordinary rate. */
+/** 로드 시점에 고정 — 그 뒤로는 시계가 정상 속도로 흘러간다. */
 const offsetMs = anchorOffsetMs();
 
-/** Whether a course clock is configured at all. */
+/** 코스 시계가 애초에 설정돼 있는지. */
 export const courseClockActive = offsetMs !== 0;
 
-/** The ISO string the clock was anchored to, for display. */
+/** 시계가 고정된 기준 ISO 문자열 — 화면 표시용. */
 export const courseNowAnchor = __COURSE_NOW__;
 
 export function courseNow(): Date {
   return new Date(Date.now() + offsetMs);
 }
 
-/** The instant `days` before the course's now, for a trailing window. */
+/** 코스의 "지금"으로부터 `days`일 전 시점 — 기간 조회용. */
 export function daysBeforeCourseNow(days: number): Date {
   const from = courseNow();
   from.setDate(from.getDate() - days);

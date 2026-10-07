@@ -1,17 +1,17 @@
 /**
- * Reading a batch against its recipe's target sugar curve.
+ * 배치를 레시피의 목표 비중 커브에 대비해서 읽어낸다.
  *
- * Fermentation drives gravity down, so a batch sitting *above* its target has
- * not come far enough: a positive delta means behind, not ahead.
+ * 발효가 진행될수록 비중은 내려가므로, 목표보다 *위*에 있는 배치는 아직
+ * 덜 진행된 것이다: 델타가 양수면 뒤처짐을 뜻하지, 앞섬이 아니다.
  */
 
-/** A recipe's target gravity by day, e.g. {"day_1": 1.05, "day_8": 1.012}. */
+/** 레시피의 날짜별 목표 비중, 예: {"day_1": 1.05, "day_8": 1.012}. */
 export type SugarCurve = Record<string, number>;
 
-/** Deviation at or under this reads as on target. */
+/** 이 값 이하의 편차는 정상(on target)으로 읽는다. */
 export const ON_TRACK_TOLERANCE = 0.005;
 
-/** Deviation over ON_TRACK_TOLERANCE and at or under this reads as slipping. */
+/** ON_TRACK_TOLERANCE를 넘고 이 값 이하인 편차는 slipping으로 읽는다. */
 export const SLIPPING_TOLERANCE = 0.008;
 
 export type DeviationBand = "on-track" | "slipping" | "off-target";
@@ -19,20 +19,20 @@ export type DeviationBand = "on-track" | "slipping" | "off-target";
 export type Deviation = {
   target: number;
   current: number;
-  /** current - target. Positive means the batch is behind its curve. */
+  /** current - target. 양수면 배치가 커브보다 뒤처졌다는 뜻. */
   delta: number;
-  /** Colour band, from how far off it is in either direction. */
+  /** 어느 방향이든 얼마나 벗어났는지에 따른 색상 밴드. */
   band: DeviationBand;
-  /** Behind by SLIPPING_TOLERANCE or more -- directional, unlike `band`. */
+  /** SLIPPING_TOLERANCE 이상 뒤처짐 — `band`와 달리 방향성이 있음(한쪽만). */
   behind: boolean;
 };
 
 /**
- * Gravity is quoted to three decimals, so a delta is rounded well past that
- * before it is compared.
+ * 비중은 소수점 셋째 자리까지 표기되므로, 비교하기 전에 그보다 훨씬 더
+ * 뒤에서 반올림한다.
  *
- * Without this, 1.018 - 1.013 is 0.005000000000000004 in binary floating point
- * and a batch sitting exactly on the tolerance would be shown as over it.
+ * 이렇게 안 하면 1.018 - 1.013이 이진 부동소수점으로 0.005000000000000004가
+ * 돼서, 허용오차에 정확히 걸쳐 있는 배치가 오차를 넘은 것처럼 보이게 된다.
  */
 function round(value: number): number {
   return Math.round(value * 1e5) / 1e5;
@@ -40,7 +40,7 @@ function round(value: number): number {
 
 type Sample = { day: number; gravity: number };
 
-/** The curve's points, in day order. Keys that are not `day_<n>` are ignored. */
+/** 커브의 점들을 날짜 순으로. `day_<n>` 형태가 아닌 키는 무시한다. */
 function samples(curve: SugarCurve): Sample[] {
   const points: Sample[] = [];
 
@@ -55,12 +55,12 @@ function samples(curve: SugarCurve): Sample[] {
 }
 
 /**
- * The target gravity on a given day.
+ * 특정 날짜의 목표 비중.
  *
- * Recipes sample the curve at a handful of days, and batches are rarely on one
- * of them, so a day in between is interpolated across the surrounding pair --
- * that is what makes the samples a curve rather than a set of checkpoints.
- * Outside the sampled range the nearest endpoint holds.
+ * 레시피는 커브를 몇 개의 날짜에서만 샘플링하고, 배치가 그 날짜에 정확히
+ * 걸리는 경우는 드물다. 그래서 그 사이 날짜는 앞뒤 샘플 쌍을 가로질러
+ * 보간한다 — 바로 이게 샘플들을 단순 체크포인트가 아니라 "커브"로
+ * 만들어주는 부분이다. 샘플링된 범위 밖은 가장 가까운 끝값을 그대로 쓴다.
  */
 export function targetAt(curve: SugarCurve, day: number): number | null {
   const points = samples(curve);
@@ -94,8 +94,8 @@ function bandFor(delta: number): DeviationBand {
 }
 
 /**
- * How one batch stands against its curve, or null when that cannot be said --
- * a batch with no recipe curve, no day count, or no reading yet.
+ * 한 배치가 자신의 커브에 비해 어떤 상태인지. 판단할 수 없으면(레시피
+ * 커브가 없거나, 발효일수가 없거나, 아직 측정값이 없으면) null.
  */
 export function deviationFor(
   curve: SugarCurve | null,
@@ -114,12 +114,12 @@ export function deviationFor(
     current,
     delta,
     band: bandFor(delta),
-    // Deliberately one-sided: a batch ahead of its curve is not behind on it.
+    // 의도적으로 한쪽 방향만 본다: 커브보다 앞서가는 배치는 뒤처진 게 아니다.
     behind: delta >= SLIPPING_TOLERANCE,
   };
 }
 
-/** Parses a numeric column, which the API sends as a string to keep precision. */
+/** numeric 컬럼을 파싱한다 — API는 정밀도를 지키려고 문자열로 보낸다. */
 export function toNumber(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value !== "string" || value.trim() === "") return null;
@@ -129,10 +129,10 @@ export function toNumber(value: unknown): number | null {
 }
 
 /**
- * Tanks serviced within the trailing window ending at `now`.
+ * `now`로 끝나는 기간 안에 정비받은 탱크들.
  *
- * A log is dated by when the work finished, falling back to when it started --
- * an entry still in progress has no completion date but is certainly recent.
+ * 로그는 작업이 끝난 시각으로 날짜를 매기고, 없으면 시작 시각으로 폴백한다
+ * — 아직 진행 중인 항목은 완료일이 없지만 분명 "최근"이기 때문이다.
  */
 export function tanksServicedSince(
   maintenance: readonly Record<string, unknown>[],
