@@ -1,6 +1,6 @@
-// First, and deliberately so: importing this installs the COURSE_NOW clock
-// override, and every module below it should already be reading that clock.
-// Keep it above the other imports.
+// 제일 먼저, 의도적으로 — 이걸 import하면 COURSE_NOW 클럭 오버라이드가
+// 설치되고, 아래의 모든 모듈은 이미 그 클럭을 읽고 있어야 한다. 다른
+// import들보다 위에 유지할 것.
 import "./clock.ts";
 
 import { swaggerUI } from "@hono/swagger-ui";
