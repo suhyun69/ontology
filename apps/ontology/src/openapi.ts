@@ -251,6 +251,47 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/objects/{type}/{id}/audit": {
+      get: {
+        tags: ["objects"],
+        summary: "Get one instance's audit history",
+        operationId: "getInstanceAudit",
+        parameters: [
+          { $ref: "#/components/parameters/TypeApiName" },
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "The instance's primary key value.",
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          "200": {
+            description:
+              "Action invocations recorded against this instance, newest first. Only the type is " +
+              "checked, not the instance -- an id with no history returns an empty list rather than " +
+              "404, since audit rows are meant to outlive what they describe.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    type: { type: "string" },
+                    id: { type: "string" },
+                    limit: { type: "integer" },
+                    count: { type: "integer" },
+                    entries: { type: "array", items: { $ref: "#/components/schemas/AuditEntry" } },
+                  },
+                  required: ["type", "id", "limit", "count", "entries"],
+                },
+              },
+            },
+          },
+          "404": { $ref: "#/components/responses/NotFound" },
+        },
+      },
+    },
     "/api/objects/{type}/{id}/actions/{actionName}": {
       post: {
         tags: ["actions"],
@@ -485,6 +526,20 @@ export const openApiDocument = {
           params: { type: "object", nullable: true },
           result: { type: "object", nullable: true },
           created_at: { type: "string", format: "date-time" },
+        },
+      },
+      AuditEntry: {
+        type: "object",
+        description:
+          "One action run against an instance, as returned from its own audit history (a lighter " +
+          "shape than AuditLogEntry, joined against the action's current name).",
+        properties: {
+          action: { type: "string", description: "The action's api_name as snapshotted when it ran." },
+          actionName: { type: "string", description: "What that action is called now; may differ from `action` after a rename." },
+          actor: { type: "string" },
+          params: { type: "object", nullable: true },
+          result: { type: "object", nullable: true },
+          createdAt: { type: "string", format: "date-time" },
         },
       },
       ActionInvocationResult: {
